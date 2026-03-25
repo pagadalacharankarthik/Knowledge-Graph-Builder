@@ -1,0 +1,13 @@
+streamlit
+neo4j
+pandas
+faiss-cpu
+sentence-transformers
+torch
+python-dotenv
+pyvis
+groq
+datasets
+spacy
+fuzzywuzzy
+python-Levenshtein
