@@ -11,8 +11,8 @@ if _backend_path not in sys.path:
     sys.path.insert(0, _backend_path)
 
 try:
-    from rag import answer_question  # type: ignore
-    from graph import get_top_persons, get_graph_data_for_visualization  # type: ignore
+    from rag import answer_question, get_email_stats  # type: ignore
+    from graph import get_top_persons, get_graph_data_for_visualization, get_kpis, get_top_entities, get_most_connected_nodes  # type: ignore
     from metrics import load_metrics  # type: ignore
 except ImportError as e:
     st.error(f"Backend Import Error: {e}. Backend path: {_backend_path}")
@@ -120,6 +120,7 @@ db_ready = initialize_knowledge_core()
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🕸️ TOPOLOGY CONTROL")
 node_limit = st.sidebar.slider("Node Density", min_value=50, max_value=500, value=200, step=50, help="Higher density shows more relationships but may slow the browser.")
+entity_filter = st.sidebar.selectbox("Entity Filter", ["ALL", "PERSON", "ORG", "LOCATION"])
 
 # Grid Layout
 left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
@@ -128,15 +129,29 @@ left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
 with left_pane:
     st.markdown('<div class="control-pane">', unsafe_allow_html=True)
     st.markdown("#### 📊 ARCHIVE STATUS")
-    ma, mb = st.columns(2)
+    kpis = get_kpis()
+    ma, mb, mc = st.columns(3)
     with ma: st.metric("CORPUS", "10K")
-    with mb: st.metric("NODES", "5K+")
+    with mb: st.metric("PEOPLE", kpis.get("persons", "0"))
+    with mc: st.metric("ORGS", kpis.get("orgs", "0"))
+    md, me, mf = st.columns(3)
+    with md: st.metric("NODES", kpis.get("nodes", "0"))
+    with me: st.metric("EDGES", kpis.get("edges", "0"))
+    with mf: st.metric("LOCS", kpis.get("locations", "0"))
     
     st.markdown("<br>#### 🏆 TOP ENTITIES", unsafe_allow_html=True)
-    leaders = get_top_persons(limit=7)
-    if leaders:
-        for l in leaders:
-            st.markdown(f"<div style='font-size:0.85rem; margin-bottom:6px;'>{l['name'].title()} <span style='float:right; color:#38bdf8;'>{l['connections']}</span></div>", unsafe_allow_html=True)
+    import pandas as pd  # type: ignore
+    t1, t2 = st.tabs(["PEOPLE", "ORGS"])
+    with t1:
+        leaders = get_top_entities("PERSON", limit=10)
+        if leaders:
+            df_people = pd.DataFrame(leaders)
+            st.bar_chart(df_people.set_index('name')['connections'], height=250)
+    with t2:
+        orgs = get_top_entities("ORG", limit=10)
+        if orgs:
+            df_orgs = pd.DataFrame(orgs)
+            st.bar_chart(df_orgs.set_index('name')['connections'], height=250)
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 REBOOT SYSTEM"):
@@ -202,13 +217,17 @@ with mid_pane:
 with right_pane:
     st.markdown('<div class="control-pane">', unsafe_allow_html=True)
     st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
-    nodes, edges = get_graph_data_for_visualization(limit=node_limit)
+    nodes, edges = get_graph_data_for_visualization(limit=node_limit, filter_label=entity_filter)
     if nodes:
+        top_node = get_most_connected_nodes(limit=1)
+        top_name = top_node[0]['name'] if top_node else None
+        
         net = Network(height="460px", width="100%", bgcolor="transparent", font_color="#d1d5db")
         net.force_atlas_2based()
         color_map = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399", "DATE": "#fbbf24"}
         for n, l in nodes:
-            net.add_node(n, label=n, color=color_map.get(l, "#f472b6"), size=15)
+            node_size = 35 if n == top_name else 15
+            net.add_node(n, label=n, color=color_map.get(l, "#f472b6"), size=node_size)
         for s, t in edges:
             net.add_edge(s, t, color="#1e293b")
         
@@ -261,6 +280,13 @@ with st.expander("📊 MODEL ANALYTICS & SYSTEM PERFORMANCE", expanded=False):
         display_df = df_metrics[['timestamp', 'query', 'response_time', 'similarity_score', 'approx_accuracy']].copy()
         display_df.sort_values('timestamp', ascending=False, inplace=True)
         st.dataframe(display_df, use_container_width=True)
+        
+        st.markdown("<br>#### 📧 Email Insights", unsafe_allow_html=True)
+        stats = get_email_stats()
+        if stats and "word_count_distribution" in stats:
+            st.markdown("**Word Count Distribution**")
+            df_dist = pd.DataFrame(list(stats["word_count_distribution"].items()), columns=["Length", "Count"])
+            st.bar_chart(df_dist.set_index('Length'))
     else:
         st.info("No query metrics recorded yet. Issue a search request to generate telemetry.")
 

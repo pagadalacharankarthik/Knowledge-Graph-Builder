@@ -157,3 +157,23 @@ Output in strict JSON:
         }
     except Exception as e:
         return {"question": question, "answer": f"LLM Error: {str(e)}", "extracted_entities": [], "retrieval_latency_seconds": latency, "db_rows": db_rows, "retrieved_emails": email_ctx}
+
+def get_email_stats():
+    core = KnowledgeCore.get_instance()
+    if not core.load():
+        return {}
+    
+    stats = {}
+    try:
+        df = core.df
+        if df is not None and 'word_count' in df.columns:
+            bins = {"0-50 words": 0, "51-150 words": 0, "151-300 words": 0, "300+ words": 0}
+            wc = df['word_count'].fillna(0).astype(int)
+            bins["0-50 words"] = int((wc <= 50).sum())
+            bins["51-150 words"] = int(((wc > 50) & (wc <= 150)).sum())
+            bins["151-300 words"] = int(((wc > 150) & (wc <= 300)).sum())
+            bins["300+ words"] = int((wc > 300).sum())
+            stats["word_count_distribution"] = bins
+    except Exception as e:
+        print(f"Email stats error: {e}")
+    return stats

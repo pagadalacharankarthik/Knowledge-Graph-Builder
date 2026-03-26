@@ -163,12 +163,42 @@ def get_graph_context(entity):
         driver.close()
     return relations
 
-def get_top_persons(limit=10):
+def get_kpis():
+    driver = get_driver()
+    if not driver: return {"nodes": "0", "edges": "0", "persons": "0", "orgs": "0", "locations": "0"}
+    kpis = {"nodes": "0", "edges": "0", "persons": "0", "orgs": "0", "locations": "0"}
+    query = """
+    MATCH (n) WITH count(n) AS total_nodes
+    MATCH ()-[r]->() WITH total_nodes, count(r) AS total_edges
+    MATCH (p:PERSON) WITH total_nodes, total_edges, count(p) AS persons
+    MATCH (o:ORG) WITH total_nodes, total_edges, persons, count(o) AS orgs
+    MATCH (l:LOCATION) RETURN total_nodes, total_edges, persons, orgs, count(l) AS locations
+    """
+    try:
+        with driver.session() as session:
+            result = session.run(query)
+            record = result.single()
+            if record:
+                kpis = {
+                    "nodes": str(record["total_nodes"]),
+                    "edges": str(record["total_edges"]),
+                    "persons": str(record["persons"]),
+                    "orgs": str(record["orgs"]),
+                    "locations": str(record["locations"])
+                }
+    except Exception as e:
+        print(f"Neo4j KPI Error: {e}")
+    finally:
+        driver.close()
+    return kpis
+
+def get_top_entities(label="PERSON", limit=10):
     driver = get_driver()
     if not driver: return []
-    query = """
-    MATCH (p:PERSON)-[r:RELATED_TO]-()
-    RETURN p.name AS name, count(r) AS degree
+    clean_label = ''.join(e for e in label if e.isalnum())
+    query = f"""
+    MATCH (n:{clean_label})-[r:RELATED_TO]-()
+    RETURN n.name AS name, count(r) AS degree
     ORDER BY degree DESC LIMIT $limit
     """
     results = []
@@ -183,17 +213,52 @@ def get_top_persons(limit=10):
         driver.close()
     return results
 
-def get_graph_data_for_visualization(limit=50):
+def get_most_connected_nodes(limit=10):
+    driver = get_driver()
+    if not driver: return []
+    query = """
+    MATCH (n)-[r:RELATED_TO]-(o)
+    RETURN n.name AS name, labels(n)[0] AS label, count(r) AS connections
+    ORDER BY connections DESC LIMIT $limit
+    """
+    results = []
+    try:
+        with driver.session() as session:
+            result = session.run(query, limit=limit)
+            for record in result:
+                results.append({"name": record["name"], "label": record["label"], "connections": record["connections"]})
+    except Exception as e:
+        print(f"Neo4j Global Connections Error: {e}")
+    finally:
+        driver.close()
+    return results
+
+def get_top_persons(limit=10):
+    return get_top_entities("PERSON", limit)
+
+def get_graph_data_for_visualization(limit=50, filter_label="ALL"):
     driver = get_driver()
     if not driver: return [], []
-    query = """
-    MATCH (s)-[r:RELATED_TO]->(o)
-    RETURN s.name AS source, 
-           case when size(labels(s)) > 0 then labels(s)[0] else 'ENTITY' end AS source_label, 
-           o.name AS target, 
-           case when size(labels(o)) > 0 then labels(o)[0] else 'ENTITY' end AS target_label
-    LIMIT $limit
-    """
+    
+    if filter_label == "ALL":
+        query = """
+        MATCH (s)-[r:RELATED_TO]->(o)
+        RETURN s.name AS source, 
+               case when size(labels(s)) > 0 then labels(s)[0] else 'ENTITY' end AS source_label, 
+               o.name AS target, 
+               case when size(labels(o)) > 0 then labels(o)[0] else 'ENTITY' end AS target_label
+        LIMIT $limit
+        """
+    else:
+        clean_label = ''.join(e for e in filter_label if e.isalnum())
+        query = f"""
+        MATCH (s:{clean_label})-[r:RELATED_TO]-(o)
+        RETURN s.name AS source, 
+               case when size(labels(s)) > 0 then labels(s)[0] else 'ENTITY' end AS source_label, 
+               o.name AS target, 
+               case when size(labels(o)) > 0 then labels(o)[0] else 'ENTITY' end AS target_label
+        LIMIT $limit
+        """
     nodes = set()
     edges = []
     try:
