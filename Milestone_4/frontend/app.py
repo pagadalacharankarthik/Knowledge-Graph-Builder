@@ -181,7 +181,7 @@ with mid_pane:
 with right_pane:
     st.markdown('<div class="control-pane">', unsafe_allow_html=True)
     st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
-    nodes, edges = get_graph_data_for_visualization(limit=40)
+    nodes, edges = get_graph_data_for_visualization(limit=node_limit)
     if nodes:
         net = Network(height="460px", width="100%", bgcolor="transparent", font_color="#d1d5db")
         net.force_atlas_2based()
