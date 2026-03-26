@@ -149,7 +149,18 @@ with mid_pane:
                     }
                     st.json(output_display)
                     
-                    t1, t2 = st.tabs(["📧 SOURCE EMAILS", "🕸️ GRAPH CONTEXT"])
+                    with st.expander("🛠️ NEURAL TRACE (Vector + Graph Verification)"):
+                        st.markdown("**Semantically Retrieved from FAISS Vector DB:**")
+                        for idx, email in enumerate(res.get('retrieved_emails', [])):
+                            st.info(f"Email {idx+1}: {email[:200]}...")
+                        
+                        st.markdown("**Retrieved from Neo4j Knowledge Graph:**")
+                        if res.get('retrieved_graph'):
+                            st.success("\n".join(res['retrieved_graph']))
+                        else:
+                            st.warning("No direct graph relationships found for this specific entity.")
+
+                    t1, t2 = st.tabs(["📧 FULL CONTEXT", "🕸️ GRAPH VIEW"])
                     with t1:
                         if res.get('retrieved_emails'):
                             for e in res['retrieved_emails'][:3]:
@@ -186,4 +197,4 @@ with right_pane:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Fixed Branding
-st.markdown("<div class='footer-pin'>DESIGNED BY CHARAN KARTHIK</div>", unsafe_allow_html=True)
+st.markdown("<div class='footer-pin'>BUILD BY CHARAN KARTHIK</div>", unsafe_allow_html=True)
