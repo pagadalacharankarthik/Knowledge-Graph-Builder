@@ -11,8 +11,9 @@ if _backend_path not in sys.path:
     sys.path.insert(0, _backend_path)
 
 try:
-    from rag import answer_question
-    from graph import get_top_persons, get_graph_data_for_visualization
+    from rag import answer_question  # type: ignore
+    from graph import get_top_persons, get_graph_data_for_visualization  # type: ignore
+    from metrics import load_metrics  # type: ignore
 except ImportError as e:
     st.error(f"Backend Import Error: {e}. Backend path: {_backend_path}")
     st.stop()
@@ -219,6 +220,44 @@ with right_pane:
     else:
         st.warning("Awaiting Graph Node Load")
     st.markdown('</div>', unsafe_allow_html=True)
+
+# 4. MODEL ANALYTICS SECTION
+st.markdown("<div style='margin-top: 2rem;'></div>", unsafe_allow_html=True)
+with st.expander("📊 MODEL ANALYTICS & SYSTEM PERFORMANCE", expanded=False):
+    metrics_data = load_metrics()
+    if metrics_data:
+        import pandas as pd  # type: ignore
+        df_metrics = pd.DataFrame(metrics_data)
+        df_metrics['timestamp'] = pd.to_datetime(df_metrics['timestamp'])
+        
+        avg_rt = df_metrics['response_time'].mean()
+        avg_acc = df_metrics['approx_accuracy'].mean()
+        
+        st.markdown("#### Key Performance Indicators")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Total Queries", len(df_metrics))
+        m2.metric("Avg Response Time", f"{avg_rt:.2f}s")
+        m3.metric("Avg Approximated Accuracy", f"{avg_acc:.1f}%")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Response Time Trend (Seconds)**")
+            st.line_chart(df_metrics.set_index('timestamp')['response_time'])
+            
+            st.markdown("**Retrieval Count Distribution**")
+            st.bar_chart(df_metrics['retrieved_docs_count'].value_counts())
+            
+        with c2:
+            st.markdown("**Similarity Score Trend (FAISS Distance)**")
+            st.line_chart(df_metrics.set_index('timestamp')['similarity_score'])
+            
+            st.markdown("**Query Volume Over Time**")
+            if not df_metrics.empty:
+                df_metrics['time_bin'] = df_metrics['timestamp'].dt.strftime('%H:00')
+                st.bar_chart(df_metrics.groupby('time_bin').size())
+    else:
+        st.info("No query metrics recorded yet. Issue a search request to generate telemetry.")
 
 # Fixed Branding
 st.markdown("<div class='footer-pin'>BUILD BY CHARAN KARTHIK</div>", unsafe_allow_html=True)

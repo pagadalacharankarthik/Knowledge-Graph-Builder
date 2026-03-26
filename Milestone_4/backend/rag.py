@@ -1,12 +1,12 @@
 import os
 import time
 import json
-import pandas as pd
-import numpy as np
-import faiss
-from sentence_transformers import SentenceTransformer
-from groq import Groq
-from graph import get_graph_context
+import pandas as pd  # type: ignore
+import numpy as np  # type: ignore
+import faiss  # type: ignore
+from sentence_transformers import SentenceTransformer  # type: ignore
+from groq import Groq  # type: ignore
+from graph import get_graph_context  # type: ignore
 
 class KnowledgeCore:
     _instance = None
@@ -20,7 +20,7 @@ class KnowledgeCore:
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            cls._instance = KnowledgeCore()
+            cls._instance = KnowledgeCore()  # type: ignore
         return cls._instance
 
     def load(self, csv_path=None):
@@ -32,19 +32,21 @@ class KnowledgeCore:
         
         print(f"Initializing KnowledgeCore from {csv_path}...")
         try:
-            self.df = pd.read_csv(csv_path)
+            df = pd.read_csv(csv_path)
             # Column Recovery
             text_cols = ['clean_message', 'message', 'body', 'content', 'text', 'Payload']
-            found_col = next((c for c in text_cols if c in self.df.columns), None)
+            found_col = next((c for c in text_cols if c in df.columns), None)
             if not found_col:
-                found_col = next((c for c in self.df.columns if self.df[c].dtype == 'object' and "id" not in c.lower()), None)
+                found_col = next((c for c in df.columns if df[c].dtype == 'object' and "id" not in c.lower()), None)
             
             if not found_col: return False
-            self.df['clean_message'] = self.df[found_col].astype(str)
+            df['clean_message'] = df[found_col].astype(str)
             
             # Entities Recovery
-            if 'normalized_entities' not in self.df.columns:
-                self.df['normalized_entities'] = self.df.get('entities', [[] for _ in range(len(self.df))])
+            if 'normalized_entities' not in df.columns:
+                df['normalized_entities'] = df.get('entities', [[] for _ in range(len(df))])
+            
+            self.df = df
             
             self.model = SentenceTransformer("all-MiniLM-L6-v2")
             
@@ -61,14 +63,14 @@ class KnowledgeCore:
                 batch_size = 500
                 embs = []
                 for i in range(0, len(docs), batch_size):
-                    embs.append(self.model.encode(docs[i:i+batch_size], convert_to_numpy=True))
+                    embs.append(self.model.encode(docs[i:i+batch_size], convert_to_numpy=True))  # type: ignore
                 embeddings = np.vstack(embs).astype('float32')
                 self.index = faiss.IndexFlatL2(embeddings.shape[1])
                 self.index.add(embeddings)
-                try: faiss.write_index(self.index, self.index_path)
+                try: faiss.write_index(self.index, self.index_path)  # type: ignore
                 except: pass
             
-            print(f"KnowledgeCore Ready: {len(self.df)} mails.")
+            print(f"KnowledgeCore Ready: {len(self.df)} mails.")  # type: ignore
             return True
         except Exception as e:
             print(f"Load Error: {e}")
@@ -129,9 +131,24 @@ Output in strict JSON:
             response_format={"type": "json_object"}
         )
         res_json = json.loads(response.choices[0].message.content)
+        answer_text = res_json.get("answer", "No answer found")
+        
+        try:
+            from metrics import log_metrics  # type: ignore
+            avg_dist = float(distances[0].mean()) if 'distances' in locals() else 0.0
+            log_metrics({
+                "query": question,
+                "response_time": time.time() - start_time,
+                "similarity_score": avg_dist,
+                "retrieved_docs_count": len(email_ctx),
+                "answer_length": len(answer_text)
+            })
+        except Exception as e:
+            print(f"Metrics log error: {e}")
+
         return {
             "question": question,
-            "answer": res_json.get("answer", "No answer found"),
+            "answer": answer_text,
             "extracted_entities": res_json.get("extracted_entities", []),
             "retrieval_latency_seconds": latency,
             "db_rows": db_rows,
