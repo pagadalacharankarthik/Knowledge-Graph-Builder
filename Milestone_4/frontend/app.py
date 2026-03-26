@@ -90,7 +90,7 @@ st.markdown("""
 @st.cache_resource(show_spinner="🛡️ Initializing Enterprise Intel Core...")
 def initialize_intelligence_engine():
     # Force a deep reload of the RAG backend
-    import backend.rag as rag
+    import rag
     import importlib
     importlib.reload(rag)
     success = rag.load_vector_db()
