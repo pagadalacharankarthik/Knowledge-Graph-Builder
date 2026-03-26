@@ -78,8 +78,6 @@ def load_vector_db(csv_path=None):
     print("Vector DB ready.")
     return True
 
-import time
-
 def retrieve_context(question):
     global _df, _index, _model
     start_time = time.time()
@@ -89,30 +87,26 @@ def retrieve_context(question):
         if not load_vector_db():
             return [], [], 0.0
             
-    # 2. Schema Guard
-    try:
-        if "normalized_entities" not in _df.columns:
-            _df["normalized_entities"] = [[] for _ in range(len(_df))]
-    except: pass
-
-    # 3. Retrieval
+    # 3. Retrieval (Upped to k=5 to match Milestone 3 search_emails)
     try:
         query_vector = _model.encode([str(question)])
-        distances, indices = _index.search(query_vector, 3) 
+        distances, indices = _index.search(query_vector, 5) 
         matched_rows = _df.iloc[indices[0]]
     except Exception as e:
         return [], [], 0.0
     
-    # 4. Content Extraction
-    email_context = matched_rows["clean_message"].tolist() if "clean_message" in matched_rows.columns else []
+    # 4. Joined Context (Cleaner for LLM accuracy)
+    email_context = []
+    if "clean_message" in matched_rows.columns:
+        email_context = matched_rows["clean_message"].tolist()
     
     # 5. Entity & Graph Extraction
     graph = []
     try:
-        if "normalized_entities" in matched_rows.columns:
-            ents = matched_rows["normalized_entities"].iloc[0]
-            if isinstance(ents, list) and len(ents) > 0:
-                graph = get_graph_context(ents[0])
+        # Pull entities from the TOP match to link context
+        ents = matched_rows["normalized_entities"].iloc[0]
+        if isinstance(ents, list) and len(ents) > 0:
+            graph = get_graph_context(ents[0])
     except: pass
             
     latency = time.time() - start_time
@@ -150,7 +144,9 @@ JSON Schema:
 5. If the answer cannot be found in the provided context, the 'answer' field MUST be exactly 'Not found in emails'."""
 
     # MIRROR MILESTONE 3 CONTEXT FORMAT
-    context_str = f"Emails:\n{email_ctx}\n\nGraph Relationships:\n{graph_ctx}"
+    # Convert list to joined string with separators for 100% LLM accuracy
+    email_context_str = "\n---\n".join([str(e) for e in email_ctx])
+    context_str = f"Emails:\n{email_context_str}\n\nGraph Relationships:\n{graph_ctx}"
     
     try:
         client = Groq(api_key=api_key)
