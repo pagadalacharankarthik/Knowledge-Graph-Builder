@@ -84,7 +84,7 @@ def answer_question(question):
     start_time = time.time()
     try:
         query_vector = core.model.encode([str(question)])
-        distances, indices = core.index.search(query_vector, 5)
+        distances, indices = core.index.search(query_vector, 8)
         matched_rows = core.df.iloc[indices[0]]
         email_ctx = matched_rows['clean_message'].tolist()
         
@@ -110,15 +110,21 @@ def answer_question(question):
     context_str = "\n---\n".join(email_ctx)
     graph_str = "\n".join(graph_ctx)
     
-    # Milestone 3 System Prompt (Standardized)
-    system_prompt = """You are an Enron email analysis assistant.
-Answer the question based ONLY on the context below. 
-If the information is not present, say 'Not found in emails' but be helpful with related context.
-Output in strict JSON:
+    # Enhanced System Prompt for Detailed Analytics
+    system_prompt = """You are an expert Enterprise Intelligence Analyst specializing in the Enron Email dataset.
+your goal is to synthesize the provided context into a highly detailed, professional, and comprehensive response.
+
+GUIDELINES:
+1. DETAIL: Do not provide short summaries. Provide multi-paragraph, in-depth explanations.
+2. CITATION: Reference specific entities, projects, or dates found in the context.
+3. SYNTHESIS: Combine both the EMAIL text and the GRAPH relationships into a single coherent narrative.
+4. UNCERTAINTY: If information is missing, state it clearly, but provide all related findings.
+
+You MUST output a valid JSON object:
 {
   "question": "...",
   "answer": "...",
-  "extracted_entities": ["...", "..."]
+  "extracted_entities": ["Entity A", "Entity B"]
 }"""
 
     try:
