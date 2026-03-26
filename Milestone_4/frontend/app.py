@@ -89,9 +89,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Optimized Caching for Speed
+# Optimized Caching for Speed (Cache Buster v8.0.2)
 @st.cache_resource(show_spinner="🛡️ Initializing Enterprise Intel Core...")
-def initialize_knowledge_core():
+def initialize_knowledge_core(version_tag):
     # Force a deep reload of the RAG backend
     import rag
     import importlib
@@ -100,8 +100,8 @@ def initialize_knowledge_core():
     success = rag.KnowledgeCore.get_instance().load()
     return success
 
-# Main Resources Injection
-db_ready = initialize_knowledge_core()
+# Main Resources Injection (Forcing depth-8 update)
+db_ready = initialize_knowledge_core("v8.0.2")
 
 # Topology Controls mapped below
 
