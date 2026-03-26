@@ -119,33 +119,21 @@ db_ready = initialize_knowledge_core()
 tab_intel, tab_analytics = st.tabs(["🔎 INTELLIGENCE HUB", "📈 ADVANCED ANALYTICS"])
 
 with tab_intel:
-    # 1. TOP-LEVEL KPI ROW SPLIT
+    # Unified Multi-Column Panels
     kpis = get_kpis()
-    c_left, c_right = st.columns(2)
+    col_left, col_right = st.columns([1, 1], gap="medium")
     
-    with c_left:
-        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+    with col_left:
+        st.markdown('<div class="control-pane" style="min-height: 850px;">', unsafe_allow_html=True)
+        # 🟢 ARCHIVE STATUS HEADER
         st.markdown("#### 📧 ARCHIVE STATUS")
         k1, k2, k3 = st.columns(3)
         k1.metric("CORPUS", "10K")
         k2.metric("PEOPLE", kpis.get("persons", "0"))
         k3.metric("ORGS", kpis.get("orgs", "0"))
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("<hr style='opacity:0.1; margin:15px 0;'>", unsafe_allow_html=True)
         
-    with c_right:
-        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
-        st.markdown("#### 🕸️ TOPOLOGY STATUS")
-        k4, k5, k6 = st.columns(3)
-        k4.metric("NODES", kpis.get("nodes", "0"))
-        k5.metric("EDGES", kpis.get("edges", "0"))
-        k6.metric("LOCS", kpis.get("locations", "0"))
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # 2. MAIN WORKSPACE
-    col_search, col_graph = st.columns([1, 1], gap="medium")
-    
-    with col_search:
-        st.markdown('<div class="control-pane" style="min-height: 600px;">', unsafe_allow_html=True)
+        # 🔍 CONTEXTUAL SEARCH
         st.markdown("#### 🔍 CONTEXTUAL SEARCH")
         query = st.text_input("QUERY_INPUT", placeholder="Request analysis...", label_visibility="collapsed")
         if st.button("EXECUTE SEARCH"):
@@ -153,39 +141,35 @@ with tab_intel:
                 if db_ready:
                     with st.spinner("Synthesizing..."):
                         res = answer_question(query)
-                        
                         st.markdown(f"""
                             <div class="answer-area">
                                 <h4 style='margin:0; color:#38bdf8;'>💡 SYSTEM RESPONSE</h4>
                                 <p style='margin-top:10px;'>{res.get('answer')}</p>
-                                <hr style='opacity:0.1; margin:10px 0;'>
-                                <span style='font-size:0.8rem; opacity:0.6;'>
-                                    Latency: {res.get('retrieval_latency_seconds', 0.0):.2f}s | 
-                                    Entities Found: {len(res.get('extracted_entities', []))}
-                                </span>
+                                <span style='font-size:0.8rem; opacity:0.6;'>Latency: {res.get('retrieval_latency_seconds', 0.0):.2f}s | Entities: {len(res.get('extracted_entities', []))}</span>
                             </div>
                         """, unsafe_allow_html=True)
                         
-                        with st.expander("🛠️ NEURAL TRACE (Vector + Graph Verification)", expanded=True):
-                            st.markdown("**Semantically Retrieved Context (FAISS):**")
+                        with st.expander("🛠️ NEURAL TRACE (Vector + Graph Audit)", expanded=True):
                             for idx, email in enumerate(res.get('retrieved_emails', [])):
-                                st.info(f"REFERENCE {idx+1}: {email[:350]}...")
-                            
-                            st.markdown("**Retrieved Graph Relationships (Neo4j):**")
+                                st.info(f"REFERENCE {idx+1}: {email[:200]}...")
                             if res.get('retrieved_graph'):
                                 st.success("\n".join(res['retrieved_graph']))
-                            else:
-                                st.warning("No direct graph relationships found for this entity.")
-                else:
-                    st.error("System Calibration Required.")
         else:
-            st.info("AI Core Standby. Enter query parameters.")
+            st.info("AI Core Standby. Enter query.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col_graph:
-        st.markdown('<div class="control-pane" style="min-height: 600px;">', unsafe_allow_html=True)
+    with col_right:
+        st.markdown('<div class="control-pane" style="min-height: 850px;">', unsafe_allow_html=True)
+        # 🕸️ TOPOLOGY STATUS HEADER
+        st.markdown("#### 🕸️ TOPOLOGY STATUS")
+        k4, k5, k6 = st.columns(3)
+        k4.metric("NODES", kpis.get("nodes", "0"))
+        k5.metric("EDGES", kpis.get("edges", "0"))
+        k6.metric("LOCS", kpis.get("locations", "0"))
+        st.markdown("<hr style='opacity:0.1; margin:15px 0;'>", unsafe_allow_html=True)
+        
+        # 🕸️ TOPOLOGY OVERVIEW
         st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
-        # Inline Controls
         g1, g2 = st.columns(2)
         with g1: node_limit = st.slider("Node Density", 10, 500, 150)
         with g2: entity_filter = st.selectbox("Entity Type", ["ALL", "PERSON", "ORG", "LOCATION"])
@@ -194,7 +178,7 @@ with tab_intel:
         if nodes:
             top_node = get_most_connected_nodes(limit=1)
             top_name = top_node[0]['name'] if top_node else None
-            net = Network(height="450px", width="100%", bgcolor="transparent", font_color="#38bdf8")
+            net = Network(height="480px", width="100%", bgcolor="transparent", font_color="#38bdf8")
             net.force_atlas_2based()
             colors = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399"}
             for n, l in nodes:
@@ -203,7 +187,7 @@ with tab_intel:
             
             path = os.path.join(os.path.dirname(__file__), "temp_graph_intel.html")
             net.save_graph(path)
-            with open(path, "r", encoding="utf-8") as f: components.html(f.read(), height=460)
+            with open(path, "r", encoding="utf-8") as f: components.html(f.read(), height=500)
         st.markdown('</div>', unsafe_allow_html=True)
 
 with tab_analytics:
