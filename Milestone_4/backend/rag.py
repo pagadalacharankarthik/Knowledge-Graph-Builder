@@ -5,6 +5,7 @@ import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 from groq import Groq
+import time
 from graph import get_graph_context
 
 # Initialize globals
@@ -115,8 +116,8 @@ def retrieve_context(question):
 def answer_question(question):
     try:
         email_ctx, graph_ctx, latency = retrieve_context(question)
-    except:
-        return {"question": question, "answer": "System Busy", "extracted_entities": [], "retrieval_latency_seconds": 0.0}
+    except Exception as e:
+        return {"question": question, "answer": f"System Error: {str(e)}", "extracted_entities": [], "retrieval_latency_seconds": 0.0}
     
     if not email_ctx:
         return {"question": question, "answer": "Not found in emails", "extracted_entities": [], "retrieval_latency_seconds": latency}
