@@ -131,12 +131,30 @@ def answer_question(question):
     if not api_key:
         return {"question": question, "answer": "LLM_API_KEY missing", "extracted_entities": [], "retrieval_latency_seconds": latency}
         
+    system_message = """You are an enterprise email analysis assistant.
+Your task is to answer user questions based *only* on the provided email context and graph relationships.
+You MUST output your answer in a strict JSON format, and ONLY the JSON object. Do not include any other text, explanations, or formatting outside the JSON object.
+
+JSON Schema:
+{
+  "question": "The original question asked by the user.",
+  "answer": "Your comprehensive answer based *only* on the provided context. If the information is not found, state EXACTLY 'Not found in emails'.",
+  "extracted_entities": ["List of relevant entities (e.g., names, companies) mentioned in the answer. Empty list if none."]
+}
+
+# Rules:
+1. Do not use external knowledge.
+2. Do not assume anything not explicitly stated in the provided context.
+3. Your 'answer' should be concise and directly address the 'question' using the provided 'Email Context' and 'Graph Relationships'.
+4. Ensure 'extracted_entities' are genuinely present in the relevant context or answer.
+5. If the answer cannot be found in the provided context, the 'answer' field MUST be exactly 'Not found in emails'."""
+
     try:
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "Answer ONLY from context. Return JSON: {\"answer\": \"string\", \"extracted_entities\": []}"},
+                {"role": "system", "content": system_message},
                 {"role": "user", "content": f"Question: {question}\nContext:\n{email_ctx}"}
             ],
             response_format={"type": "json_object"},
