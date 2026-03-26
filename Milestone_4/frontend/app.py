@@ -85,14 +85,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Optimized Caching for Speed
+@st.cache_resource
+def get_resource():
+    print("Pre-loading Intelligence Core (10k Mails)...")
+    success = load_vector_db()
+    return success
+
 # Application Header
 header_col, branding_col = st.columns([4, 1])
 with header_col:
     st.markdown("<h2 style='margin:0; letter-spacing:-1px;'>🛡️ ENTERPRISE INTELLIGENCE SYSTEM</h2>", unsafe_allow_html=True)
 with branding_col:
-    st.markdown("<div style='text-align:right; color:#38bdf8; font-weight:700;'>VERSION: 4.1 | STABLE</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:right; color:#38bdf8; font-weight:700;'>VERSION: 4.2 | SPEED-PRO</div>", unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 10px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
+
+# Main Resources Injection
+db_ready = get_resource()
 
 # Grid Layout
 left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
@@ -113,6 +123,7 @@ with left_pane:
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 REBOOT SYSTEM"):
+        st.cache_resource.clear()
         st.session_state.clear()
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -124,19 +135,22 @@ with mid_pane:
     query = st.text_input("QUERY_INPUT", placeholder="Request analysis...", label_visibility="collapsed")
     if st.button("EXECUTE"):
         if query:
-            with st.spinner("Synthesizing..."):
-                res = answer_question(query)
-                st.markdown("#### 💡 SYSTEM RESPONSE")
-                st.markdown(f'<div class="answer-area">{res["answer"]}</div>', unsafe_allow_html=True)
-                
-                t1, t2 = st.tabs(["📧 SOURCE TEXT", "🕸️ GRAPH DATA"])
-                with t1:
-                    if res.get('retrieved_emails'):
-                        for e in res['retrieved_emails'][:2]:
-                            st.markdown(f"<div style='font-size:0.8rem; opacity:0.7; padding:8px; border-bottom:1px solid #1e293b;'>{e[:250]}...</div>", unsafe_allow_html=True)
-                with t2:
-                    if res.get('retrieved_graph'):
-                        st.code("\n".join(res['retrieved_graph'][:4]), language="text")
+            if db_ready:
+                with st.spinner("Synthesizing..."):
+                    res = answer_question(query)
+                    st.markdown("#### 💡 SYSTEM RESPONSE")
+                    st.markdown(f'<div class="answer-area">{res["answer"]}</div>', unsafe_allow_html=True)
+                    
+                    t1, t2 = st.tabs(["📧 SOURCE TEXT", "🕸️ GRAPH DATA"])
+                    with t1:
+                        if res.get('retrieved_emails'):
+                            for e in res['retrieved_emails'][:2]:
+                                st.markdown(f"<div style='font-size:0.8rem; opacity:0.7; padding:8px; border-bottom:1px solid #1e293b;'>{e[:300]}...</div>", unsafe_allow_html=True)
+                    with t2:
+                        if res.get('retrieved_graph'):
+                            st.code("\n".join(res['retrieved_graph'][:4]), language="text")
+            else:
+                st.error("System Initialization Failed. Click Reboot.")
     else:
         st.info("System Ready. Enter parameters.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -165,7 +179,3 @@ with right_pane:
 
 # Fixed Branding
 st.markdown("<div class='footer-pin'>DESIGNED BY CHARAN KARTHIK</div>", unsafe_allow_html=True)
-
-# Load DB on start
-if 'db_loaded' not in st.session_state:
-    st.session_state.db_loaded = load_vector_db()
