@@ -29,6 +29,16 @@ def load_vector_db(csv_path=None):
     if 'clean_message' not in _df.columns and 'message' in _df.columns:
         _df['clean_message'] = _df['message'].astype(str)
     
+    # Ensure entity columns exist even if not in CSV
+    if 'entities' not in _df.columns:
+        print("Extracting entities for RAG context...")
+        def naive_extract(text):
+            return list(set([w for w in str(text).split() if w.istitle()][:5]))
+        _df['entities'] = _df['clean_message'].apply(naive_extract)
+    
+    if 'normalized_entities' not in _df.columns:
+        _df['normalized_entities'] = _df['entities'].apply(lambda e: e if isinstance(e, list) else (e.split(",") if isinstance(e, str) else []))
+
     # Pre-process search text
     _df["search_text"] = _df["clean_message"].astype(str)
     
