@@ -13,49 +13,67 @@ _model = None
 _df = None
 
 def load_vector_db(csv_path=None):
+    global _index, _model, _df
+    
     if csv_path is None:
         csv_path = os.path.join(os.path.dirname(__file__), 'data', 'cleaned_enron_emails.csv')
     
-    global _index, _model, _df
     index_path = os.path.join(os.path.dirname(__file__), 'faiss_index')
     
     print(f"Loading data from {csv_path}...")
     try:
         _df = pd.read_csv(csv_path)
-    except FileNotFoundError:
-        print(f"Error: {csv_path} not found.")
+    except Exception as e:
+        print(f"Critical Error: {e}")
         return False
         
-    if 'clean_message' not in _df.columns and 'message' in _df.columns:
-        _df['clean_message'] = _df['message'].astype(str)
+    # ULTIMATE COLUMN RECOVERY: Scan for message content
+    text_cols = ['clean_message', 'message', 'body', 'content', 'text', 'Payload']
+    found_col = None
+    for col in text_cols:
+        if col in _df.columns:
+            found_col = col
+            break
+            
+    if not found_col:
+        # Fallback to the first object/string column that isn't ID-like
+        for col in _df.columns:
+            if _df[col].dtype == 'object':
+                found_col = col
+                break
     
-    # NEW: Safety check - ensure normalized_entities exists globally
+    if not found_col:
+        print("Error: No text column identified.")
+        return False
+        
+    _df['clean_message'] = _df[found_col].astype(str)
+    _df["search_text"] = _df['clean_message']
+    
+    # ENTITY RECOVERY
     if 'normalized_entities' not in _df.columns:
         if 'entities' in _df.columns:
             _df['normalized_entities'] = _df['entities'].apply(lambda e: e if isinstance(e, list) else (str(e).split(",") if isinstance(e, str) else []))
         else:
-            _df['entities'] = [[] for _ in range(len(_df))]
             _df['normalized_entities'] = [[] for _ in range(len(_df))]
 
-    # Pre-process search text
-    _df["search_text"] = _df["clean_message"].astype(str)
-    
-    print("Loading embedding model (all-MiniLM-L6-v2)")
+    print("Loading embedding model...")
     _model = SentenceTransformer("all-MiniLM-L6-v2")
     
     if os.path.exists(index_path):
-        print(f"Loading existing FAISS index from {index_path}")
-        _index = faiss.read_index(index_path)
-    else:
-        print("Creating new FAISS index (encoding 20,000 emails)...")
+        try:
+            _index = faiss.read_index(index_path)
+        except:
+            _index = None # Force recreation if corrupted
+            
+    if _index is None:
+        print("Building new index...")
         documents = _df["search_text"].tolist()
-        embeddings = _model.encode(documents, batch_size=64, show_progress_bar=True)
-        embeddings = np.array(embeddings).astype('float32')
-        
+        embeddings = _model.encode(documents, convert_to_numpy=True).astype('float32')
         _index = faiss.IndexFlatL2(embeddings.shape[1])
         _index.add(embeddings)
-        faiss.write_index(_index, index_path)
-        print(f"Vector Index saved to {index_path}")
+        try:
+            faiss.write_index(_index, index_path)
+        except: pass
         
     print("Vector DB ready.")
     return True
