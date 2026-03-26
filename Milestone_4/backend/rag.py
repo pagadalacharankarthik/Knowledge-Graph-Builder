@@ -61,27 +61,38 @@ def load_vector_db(csv_path=None):
     return True
 
 def retrieve_context(question):
+    global _df, _index, _model
     if _index is None or _model is None or _df is None:
         if not load_vector_db():
             return [], []
             
+    # CRITICAL: Ensure normalized_entities exists just-in-time
+    if "normalized_entities" not in _df.columns:
+        print("Recovering missing columns just-in-time...")
+        if "entities" in _df.columns:
+            _df["normalized_entities"] = _df["entities"].apply(lambda e: e if isinstance(e, list) else (str(e).split(",") if isinstance(e, str) else []))
+        else:
+            _df["normalized_entities"] = [[] for _ in range(len(_df))]
+
     query_vector = _model.encode([question])
-    distances, indices = _index.search(query_vector, 3) # Top 3 emails
+    distances, indices = _index.search(query_vector, 3) 
     
     matched_rows = _df.iloc[indices[0]]
-    email_context = matched_rows["clean_message"].tolist()
+    email_context = matched_rows["clean_message"].tolist() if "clean_message" in matched_rows.columns else []
     
-    # Safety check for column existence
-    if "normalized_entities" not in matched_rows.columns:
-        top_entities = []
-    else:
-        top_entities = matched_rows["normalized_entities"].iloc[0] if not matched_rows.empty else []
+    # Defensive entity extraction
+    top_entities = []
+    if not matched_rows.empty and "normalized_entities" in matched_rows.columns:
+        top_entities = matched_rows["normalized_entities"].iloc[0]
+        if not isinstance(top_entities, list): top_entities = []
     
     graph_context = []
-    
     if len(top_entities) > 0:
-        graph_context = get_graph_context(top_entities[0])
-        
+        try:
+            graph_context = get_graph_context(top_entities[0])
+        except:
+            graph_context = []
+            
     return email_context, graph_context
 
 def answer_question(question):
