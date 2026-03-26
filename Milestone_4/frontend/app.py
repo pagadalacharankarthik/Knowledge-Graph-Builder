@@ -135,6 +135,11 @@ with mid_pane:
                     res = answer_question(query)
                     st.markdown("#### 💡 SYSTEM RESPONSE (JSON)")
                     
+                    # Dynamic Diagnosis info (Busts the 'Empty Data' mystery)
+                    db_rows = res.get('db_rows', 0)
+                    st.sidebar.markdown(f"**Intelligence Core Status:** {'🟢 ACTIVE' if db_rows > 0 else '🔴 EMPTY'}")
+                    st.sidebar.write(f"Total Mails: {db_rows:,}")
+
                     # Display the exact fields the user expects from Milestone 3
                     output_display = {
                         "question": res.get("question", query),
