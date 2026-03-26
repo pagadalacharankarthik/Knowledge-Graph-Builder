@@ -145,7 +145,9 @@ with mid_pane:
                         "question": res.get("question", query),
                         "answer": res.get("answer"),
                         "extracted_entities": res.get("extracted_entities", []),
-                        "retrieval_latency_seconds": res.get("retrieval_latency_seconds", 0.0)
+                        "retrieved_emails_count": len(res.get("retrieved_emails", [])),
+                        "retrieval_latency_seconds": res.get("retrieval_latency_seconds", 0.0),
+                        "database_total_rows": db_rows
                     }
                     st.json(output_display)
                     

@@ -118,7 +118,9 @@ def retrieve_context(question):
     except: pass
             
     latency = time.time() - start_time
-    return email_context, graph, latency, len(_df)
+    # Ensure we return a real integer count
+    row_count = len(_df) if _df is not None else 0
+    return email_context, graph, latency, row_count
 
 def answer_question(question):
     try:
