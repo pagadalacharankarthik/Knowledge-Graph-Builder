@@ -67,9 +67,16 @@ def load_vector_db(csv_path=None):
             _index = None # Force recreation if corrupted
             
     if _index is None:
-        print("Building new index...")
+        print("Building new index in batches (CPU Optimized)...")
         documents = _df["search_text"].tolist()
-        embeddings = _model.encode(documents, convert_to_numpy=True).astype('float32')
+        batch_size = 500
+        all_embeddings = []
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i + batch_size]
+            batch_emb = _model.encode(batch, convert_to_numpy=True).astype('float32')
+            all_embeddings.append(batch_emb)
+        
+        embeddings = np.vstack(all_embeddings)
         _index = faiss.IndexFlatL2(embeddings.shape[1])
         _index.add(embeddings)
         try:
