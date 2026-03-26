@@ -119,17 +119,27 @@ db_ready = initialize_knowledge_core()
 tab_intel, tab_analytics = st.tabs(["🔎 INTELLIGENCE HUB", "📈 ADVANCED ANALYTICS"])
 
 with tab_intel:
-    # 1. TOP-LEVEL KPI ROW
-    st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+    # 1. TOP-LEVEL KPI ROW SPLIT
     kpis = get_kpis()
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
-    c1.metric("CORPUS", "10K")
-    c2.metric("PEOPLE", kpis.get("persons", "0"))
-    c3.metric("ORGS", kpis.get("orgs", "0"))
-    c4.metric("NODES", kpis.get("nodes", "0"))
-    c5.metric("EDGES", kpis.get("edges", "0"))
-    c6.metric("LOCS", kpis.get("locations", "0"))
-    st.markdown('</div>', unsafe_allow_html=True)
+    c_left, c_right = st.columns(2)
+    
+    with c_left:
+        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+        st.markdown("#### 📧 ARCHIVE STATUS")
+        k1, k2, k3 = st.columns(3)
+        k1.metric("CORPUS", "10K")
+        k2.metric("PEOPLE", kpis.get("persons", "0"))
+        k3.metric("ORGS", kpis.get("orgs", "0"))
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    with c_right:
+        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+        st.markdown("#### 🕸️ TOPOLOGY STATUS")
+        k4, k5, k6 = st.columns(3)
+        k4.metric("NODES", kpis.get("nodes", "0"))
+        k5.metric("EDGES", kpis.get("edges", "0"))
+        k6.metric("LOCS", kpis.get("locations", "0"))
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # 2. MAIN WORKSPACE
     col_search, col_graph = st.columns([1, 1], gap="medium")
@@ -143,23 +153,29 @@ with tab_intel:
                 if db_ready:
                     with st.spinner("Synthesizing..."):
                         res = answer_question(query)
-                        st.markdown("#### 💡 SYSTEM RESPONSE")
                         
-                        output_display = {
-                            "answer": res.get("answer"),
-                            "entities_found": len(res.get("extracted_entities", [])),
-                            "latency": f"{res.get('retrieval_latency_seconds', 0.0):.2f}s"
-                        }
-                        st.json(output_display)
+                        st.markdown(f"""
+                            <div class="answer-area">
+                                <h4 style='margin:0; color:#38bdf8;'>💡 SYSTEM RESPONSE</h4>
+                                <p style='margin-top:10px;'>{res.get('answer')}</p>
+                                <hr style='opacity:0.1; margin:10px 0;'>
+                                <span style='font-size:0.8rem; opacity:0.6;'>
+                                    Latency: {res.get('retrieval_latency_seconds', 0.0):.2f}s | 
+                                    Entities Found: {len(res.get('extracted_entities', []))}
+                                </span>
+                            </div>
+                        """, unsafe_allow_html=True)
                         
-                        with st.expander("🛠️ NEURAL TRACE", expanded=True):
-                            t1, t2 = st.tabs(["📧 CONTEXT", "🕸️ GRAPH"])
-                            with t1:
-                                for idx, email in enumerate(res.get('retrieved_emails', [])):
-                                    st.info(f"Ref {idx+1}: {email[:300]}...")
-                            with t2:
-                                if res.get('retrieved_graph'):
-                                    st.code("\n".join(res['retrieved_graph']))
+                        with st.expander("🛠️ NEURAL TRACE (Vector + Graph Verification)", expanded=True):
+                            st.markdown("**Semantically Retrieved Context (FAISS):**")
+                            for idx, email in enumerate(res.get('retrieved_emails', [])):
+                                st.info(f"REFERENCE {idx+1}: {email[:350]}...")
+                            
+                            st.markdown("**Retrieved Graph Relationships (Neo4j):**")
+                            if res.get('retrieved_graph'):
+                                st.success("\n".join(res['retrieved_graph']))
+                            else:
+                                st.warning("No direct graph relationships found for this entity.")
                 else:
                     st.error("System Calibration Required.")
         else:
@@ -233,8 +249,12 @@ with tab_analytics:
         m_col3.metric("Total Sessions", len(dfm))
         
         c1, c2 = st.columns(2)
-        with c1: st.line_chart(dfm.set_index('timestamp')['response_time'])
-        with c2: st.line_chart(dfm.set_index('timestamp')['similarity_score'])
+        with c1:
+            st.markdown("**Response Time (Latency) Trends**")
+            st.line_chart(dfm.set_index('timestamp')['response_time'])
+        with c2:
+            st.markdown("**Knowledge Retrieval Quality (FAISS Distance)**")
+            st.line_chart(dfm.set_index('timestamp')['similarity_score'])
         
         st.markdown("#### 📜 RECENT QUERY HISTORY")
         st.dataframe(dfm.sort_values('timestamp', ascending=False), use_container_width=True)
