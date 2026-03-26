@@ -5,11 +5,17 @@ from pyvis.network import Network
 import os
 import sys
 
-# Add backend to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+# Add backend to path (must be absolute for Streamlit Cloud)
+_backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+if _backend_path not in sys.path:
+    sys.path.insert(0, _backend_path)
 
-from rag import answer_question, load_vector_db
-from graph import get_top_persons, get_graph_data_for_visualization
+try:
+    from rag import answer_question, load_vector_db
+    from graph import get_top_persons, get_graph_data_for_visualization
+except ImportError as e:
+    st.error(f"Backend Import Error: {e}. Backend path: {_backend_path}")
+    st.stop()
 
 # Setup UI page configuration
 st.set_page_config(
