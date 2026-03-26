@@ -175,12 +175,12 @@ with tab_intel:
             if nodes:
                 top_node = get_most_connected_nodes(limit=1)
                 top_name = top_node[0]['name'] if top_node else None
-                net = Network(height="450px", width="100%", bgcolor="transparent", font_color="#38bdf8")
+                net = Network(height="450px", width="100%", bgcolor="#0b0e14", font_color="#ffffff")
                 net.force_atlas_2based()
                 colors = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399"}
                 for n, l in nodes:
-                    net.add_node(n, label=n, color=colors.get(l, "#f472b6"), size=30 if n == top_name else 15)
-                for s, t in edges: net.add_edge(s, t, color="rgba(56, 189, 248, 0.1)")
+                    net.add_node(n, label=n, color=colors.get(l, "#f472b6"), size=35 if n == top_name else 20)
+                for s, t in edges: net.add_edge(s, t, color="rgba(56, 189, 248, 0.4)")
                 
                 path = os.path.join(os.path.dirname(__file__), "temp_graph_intel.html")
                 net.save_graph(path)
