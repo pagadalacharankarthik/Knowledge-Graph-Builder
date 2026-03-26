@@ -4,6 +4,7 @@ import streamlit.components.v1 as components
 from pyvis.network import Network
 import os
 import sys
+import pandas as pd  # type: ignore
 
 # Add backend to path (must be absolute for Streamlit Cloud)
 _backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend'))
@@ -214,7 +215,7 @@ with tab_analytics:
         st.markdown('<div class="control-pane">', unsafe_allow_html=True)
         st.markdown("#### 🕸️ NETWORK CENTRALITY")
         central_nodes = get_most_connected_nodes(10)
-        st.table(pd.DataFrame(central_nodes))
+        if central_nodes: st.table(pd.DataFrame(central_nodes))
         
         st.markdown("#### 📧 EMAIL LENGTH DISTRIBUTION")
         estats = get_email_stats()
