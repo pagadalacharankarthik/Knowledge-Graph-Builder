@@ -84,7 +84,7 @@ def answer_question(question):
     start_time = time.time()
     try:
         query_vector = core.model.encode([str(question)])
-        distances, indices = core.index.search(query_vector, 8)
+        distances, indices = core.index.search(query_vector, 6)
         matched_rows = core.df.iloc[indices[0]]
         email_ctx = matched_rows['clean_message'].tolist()
         
@@ -110,15 +110,15 @@ def answer_question(question):
     context_str = "\n---\n".join(email_ctx)
     graph_str = "\n".join(graph_ctx)
     
-    # Enhanced System Prompt for Detailed Analytics
+    # Quality & Conciseness Prompt
     system_prompt = """You are an expert Enterprise Intelligence Analyst specializing in the Enron Email dataset.
-your goal is to synthesize the provided context into a highly detailed, professional, and comprehensive response.
+Your goal is to provide concise, high-quality, and data-driven insights.
 
 GUIDELINES:
-1. DETAIL: Do not provide short summaries. Provide multi-paragraph, in-depth explanations.
-2. CITATION: Reference specific entities, projects, or dates found in the context.
-3. SYNTHESIS: Combine both the EMAIL text and the GRAPH relationships into a single coherent narrative.
-4. UNCERTAINTY: If information is missing, state it clearly, but provide all related findings.
+1. QUALITY OVER QUANTITY: Do not provide walls of text. Provide 3-5 high-impact bullet points.
+2. SYNTHESIS: Briefly synthesize the most relevant findings from the provided emails and graph.
+3. CITATION: Explicitly mention names and dates if they are in the context.
+4. If the data is missing, be brief: "Data not found in the hub."
 
 You MUST output a valid JSON object:
 {
