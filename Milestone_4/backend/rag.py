@@ -118,16 +118,23 @@ def retrieve_context(question):
     except: pass
             
     latency = time.time() - start_time
-    return email_context, graph, latency
+    return email_context, graph, latency, len(_df)
 
 def answer_question(question):
     try:
-        email_ctx, graph_ctx, latency = retrieve_context(question)
+        email_ctx, graph_ctx, latency, db_rows = retrieve_context(question)
     except Exception as e:
-        return {"question": question, "answer": f"System Error: {str(e)}", "extracted_entities": [], "retrieval_latency_seconds": 0.0}
+        return {"question": question, "answer": f"System Error: {str(e)}", "extracted_entities": [], "retrieval_latency_seconds": 0.0, "db_rows": 0}
     
     if not email_ctx:
-        return {"question": question, "answer": "Not found in emails", "extracted_entities": [], "retrieval_latency_seconds": latency}
+        return {
+            "question": question, 
+            "answer": "Not found in emails (Zero-Context)", 
+            "extracted_entities": [], 
+            "retrieval_latency_seconds": latency,
+            "db_rows": db_rows,
+            "retrieved_emails": []
+        }
         
     api_key = os.environ.get("LLM_API_KEY")
     if not api_key:
