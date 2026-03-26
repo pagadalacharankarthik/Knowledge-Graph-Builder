@@ -1,7 +1,9 @@
 # 🧠 AI Knowledge Graph Builder & RAG Dashboard
 Built by **Charan Karthik**
 
-An advanced, end-to-end mission-ready AI system that transforms raw email data into a searchable, visual, and intelligent knowledge engine using Hybrid RAG and Graph Analytics.
+**Live Production App:** [https://knowledge-graph-builder-001.streamlit.app/](https://knowledge-graph-builder-001.streamlit.app/)
+
+**Agile Project Tracking:** [Agile Intelligence Sheet](file:///C:/Users/chara/.gemini/antigravity/brain/88828f38-1366-4cca-94b4-a9407acb82c1/agile_tracking.md)
 
 ---
 
