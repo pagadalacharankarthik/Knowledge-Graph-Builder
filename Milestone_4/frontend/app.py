@@ -100,6 +100,11 @@ def initialize_knowledge_core():
 # Main Resources Injection
 db_ready = initialize_knowledge_core()
 
+# Topology Control Slider in Sidebar
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🕸️ TOPOLOGY CONTROL")
+node_limit = st.sidebar.slider("Node Density", min_value=40, max_value=300, value=100, help="Higher density shows more relationships but may slow the browser.")
+
 # Grid Layout
 left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
 
