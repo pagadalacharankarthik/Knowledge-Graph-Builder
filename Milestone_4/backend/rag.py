@@ -155,7 +155,7 @@ def answer_question(question):
                 {"role": "system", "content": "You are a professional Intelligence Analyst. Answer based ONLY on provided context. Be concise."},
                 {"role": "user", "content": f"Query: {question}\n\n{context_str}"}
             ],
-            model="mixtral-8x7b-32768",
+            model="llama-3.3-70b-versatile",
         )
         return {
             "answer": chat_completion.choices[0].message.content,
