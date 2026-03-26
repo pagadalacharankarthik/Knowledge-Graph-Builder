@@ -116,11 +116,7 @@ def initialize_knowledge_core():
 # Main Resources Injection
 db_ready = initialize_knowledge_core()
 
-# Topology Control Slider in Sidebar
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🕸️ TOPOLOGY CONTROL")
-node_limit = st.sidebar.slider("Node Density", min_value=50, max_value=500, value=200, step=50, help="Higher density shows more relationships but may slow the browser.")
-entity_filter = st.sidebar.selectbox("Entity Filter", ["ALL", "PERSON", "ORG", "LOCATION"])
+# Topology Controls mapped below
 
 # Grid Layout
 left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
@@ -216,7 +212,11 @@ with mid_pane:
 # 3. VISUALIZATION PANE
 with right_pane:
     st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+    
     st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
+    fcol1, fcol2 = st.columns(2)
+    with fcol1: node_limit = st.slider("Node Density", min_value=10, max_value=500, value=150, step=50, help="Higher density shows more relationships but may slow the browser.")
+    with fcol2: entity_filter = st.selectbox("Entity Filter", ["ALL", "PERSON", "ORG", "LOCATION"])
     nodes, edges = get_graph_data_for_visualization(limit=node_limit, filter_label=entity_filter)
     if nodes:
         top_node = get_most_connected_nodes(limit=1)
