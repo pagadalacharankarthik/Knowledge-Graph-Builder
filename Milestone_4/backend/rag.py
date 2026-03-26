@@ -78,24 +78,21 @@ def load_vector_db(csv_path=None):
     print("Vector DB ready.")
     return True
 
+import time
+
 def retrieve_context(question):
     global _df, _index, _model
+    start_time = time.time()
     
     # 1. Mandatory Singleton Check
     if _index is None or _model is None or _df is None:
         if not load_vector_db():
-            return [], []
+            return [], [], 0.0
             
-    # 2. Schema Guard (Run every time to be 100% sure)
+    # 2. Schema Guard
     try:
         if "normalized_entities" not in _df.columns:
             _df["normalized_entities"] = [[] for _ in range(len(_df))]
-        if "clean_message" not in _df.columns:
-            # Last resort: find first object column
-            for c in _df.columns:
-                if _df[c].dtype == 'object':
-                    _df["clean_message"] = _df[c].astype(str)
-                    break
     except: pass
 
     # 3. Retrieval
@@ -104,63 +101,55 @@ def retrieve_context(question):
         distances, indices = _index.search(query_vector, 3) 
         matched_rows = _df.iloc[indices[0]]
     except Exception as e:
-        print(f"Retrieval Logic Error: {e}")
-        return [], []
+        return [], [], 0.0
     
     # 4. Content Extraction
-    email_context = []
-    if "clean_message" in matched_rows.columns:
-        email_context = matched_rows["clean_message"].tolist()
+    email_context = matched_rows["clean_message"].tolist() if "clean_message" in matched_rows.columns else []
     
     # 5. Entity & Graph Extraction
-    graph_context = []
+    graph = []
     try:
-        # Use column indexing instead of name access for maximum safety
         if "normalized_entities" in matched_rows.columns:
-            col_pos = matched_rows.columns.get_loc("normalized_entities")
-            top_entities = matched_rows.iloc[0, col_pos]
-            if isinstance(top_entities, list) and len(top_entities) > 0:
-                graph_context = get_graph_context(top_entities[0])
-            elif isinstance(top_entities, str):
-                # Handle stringified lists from CSV
-                try:
-                    ents = eval(top_entities)
-                    if isinstance(ents, list) and len(ents) > 0:
-                        graph_context = get_graph_context(ents[0])
-                except: pass
-    except:
-        pass
+            ents = matched_rows["normalized_entities"].iloc[0]
+            if isinstance(ents, list) and len(ents) > 0:
+                graph = get_graph_context(ents[0])
+    except: pass
             
-    return email_context, graph_context
+    latency = time.time() - start_time
+    return email_context, graph, latency
 
 def answer_question(question):
     try:
-        email_ctx, graph_ctx = retrieve_context(question)
-    except Exception as e:
-        return {"answer": f"System Busy. Error: {e}", "retrieved_emails": [], "retrieved_graph": []}
+        email_ctx, graph_ctx, latency = retrieve_context(question)
+    except:
+        return {"question": question, "answer": "System Busy", "extracted_entities": [], "retrieval_latency_seconds": 0.0}
     
     if not email_ctx:
-        return {"answer": "No records found for this query.", "retrieved_emails": [], "retrieved_graph": []}
+        return {"question": question, "answer": "Not found in emails", "extracted_entities": [], "retrieval_latency_seconds": latency}
         
-    context_str = f"Context:\n{email_ctx}\n\nGraph:\n{graph_ctx}"
-    
     api_key = os.environ.get("LLM_API_KEY")
     if not api_key:
-        return {"answer": "LLM_API_KEY missing in Environment.", "retrieved_emails": email_ctx, "retrieved_graph": graph_ctx}
+        return {"question": question, "answer": "LLM_API_KEY missing", "extracted_entities": [], "retrieval_latency_seconds": latency}
         
     try:
         client = Groq(api_key=api_key)
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a professional Intelligence Analyst. Answer based ONLY on provided context. Be concise."},
-                {"role": "user", "content": f"Query: {question}\n\n{context_str}"}
-            ],
+        response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "Answer ONLY from context. Return JSON: {\"answer\": \"string\", \"extracted_entities\": []}"},
+                {"role": "user", "content": f"Question: {question}\nContext:\n{email_ctx}"}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.0
         )
+        res_json = json.loads(response.choices[0].message.content)
         return {
-            "answer": chat_completion.choices[0].message.content,
-            "retrieved_emails": email_ctx,
-            "retrieved_graph": graph_ctx
+            "question": question,
+            "answer": res_json.get("answer", "Not found in emails"),
+            "extracted_entities": res_json.get("extracted_entities", []),
+            "retrieved_emails": email_ctx, # Kept for UI tabs
+            "retrieved_graph": graph_ctx,  # Kept for UI tabs
+            "retrieval_latency_seconds": latency
         }
     except Exception as e:
-        return {"answer": f"LLM Error: {e}", "retrieved_emails": email_ctx, "retrieved_graph": graph_ctx}
+        return {"question": question, "answer": f"Error: {e}", "extracted_entities": [], "retrieval_latency_seconds": latency}

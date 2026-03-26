@@ -138,17 +138,25 @@ with mid_pane:
             if db_ready:
                 with st.spinner("Synthesizing..."):
                     res = answer_question(query)
-                    st.markdown("#### 💡 SYSTEM RESPONSE")
-                    st.markdown(f'<div class="answer-area">{res["answer"]}</div>', unsafe_allow_html=True)
+                    st.markdown("#### 💡 SYSTEM RESPONSE (JSON)")
                     
-                    t1, t2 = st.tabs(["📧 SOURCE TEXT", "🕸️ GRAPH DATA"])
+                    # Display the exact fields the user expects from Milestone 3
+                    output_display = {
+                        "question": res.get("question", query),
+                        "answer": res.get("answer"),
+                        "extracted_entities": res.get("extracted_entities", []),
+                        "retrieval_latency_seconds": res.get("retrieval_latency_seconds", 0.0)
+                    }
+                    st.json(output_display)
+                    
+                    t1, t2 = st.tabs(["📧 SOURCE EMAILS", "🕸️ GRAPH CONTEXT"])
                     with t1:
                         if res.get('retrieved_emails'):
-                            for e in res['retrieved_emails'][:2]:
-                                st.markdown(f"<div style='font-size:0.8rem; opacity:0.7; padding:8px; border-bottom:1px solid #1e293b;'>{e[:300]}...</div>", unsafe_allow_html=True)
+                            for e in res['retrieved_emails'][:3]:
+                                st.markdown(f"<div style='font-size:0.8rem; opacity:0.7; padding:8px; border-bottom:1px solid #1e293b;'>{e[:400]}...</div>", unsafe_allow_html=True)
                     with t2:
                         if res.get('retrieved_graph'):
-                            st.code("\n".join(res['retrieved_graph'][:4]), language="text")
+                            st.code("\n".join(res['retrieved_graph']), language="text")
             else:
                 st.error("System Initialization Failed. Click Reboot.")
     else:
