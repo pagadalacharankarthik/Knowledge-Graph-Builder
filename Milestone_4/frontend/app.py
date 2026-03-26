@@ -112,7 +112,7 @@ db_ready = initialize_knowledge_core()
 # Topology Control Slider in Sidebar
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🕸️ TOPOLOGY CONTROL")
-node_limit = st.sidebar.slider("Node Density", min_value=40, max_value=300, value=100, help="Higher density shows more relationships but may slow the browser.")
+node_limit = st.sidebar.slider("Node Density", min_value=50, max_value=500, value=200, step=50, help="Higher density shows more relationships but may slow the browser.")
 
 # Grid Layout
 left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
@@ -199,8 +199,9 @@ with right_pane:
     if nodes:
         net = Network(height="460px", width="100%", bgcolor="transparent", font_color="#d1d5db")
         net.force_atlas_2based()
+        color_map = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399", "DATE": "#fbbf24"}
         for n, l in nodes:
-            net.add_node(n, label=n, color="#38bdf8" if l == "PERSON" else "#818cf8")
+            net.add_node(n, label=n, color=color_map.get(l, "#f472b6"), size=15)
         for s, t in edges:
             net.add_edge(s, t, color="#1e293b")
         
