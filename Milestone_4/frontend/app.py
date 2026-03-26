@@ -88,16 +88,17 @@ st.markdown("""
 
 # Optimized Caching for Speed
 @st.cache_resource(show_spinner="🛡️ Initializing Enterprise Intel Core...")
-def initialize_intelligence_engine():
+def initialize_knowledge_core():
     # Force a deep reload of the RAG backend
     import rag
     import importlib
     importlib.reload(rag)
-    success = rag.load_vector_db()
+    # The new class-based singleton init
+    success = rag.KnowledgeCore.get_instance().load()
     return success
 
 # Main Resources Injection
-db_ready = initialize_intelligence_engine()
+db_ready = initialize_knowledge_core()
 
 # Grid Layout
 left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
