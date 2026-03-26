@@ -95,11 +95,7 @@ st.markdown("""
             text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
             z-index: 100;
         }
-        /* Tab height optimization */
-        .stTabs [data-baseweb="tab-panel"] {
-            max-height: 200px;
-            overflow-y: auto;
-        }
+        /* End CSS */
     </style>
 """, unsafe_allow_html=True)
 
