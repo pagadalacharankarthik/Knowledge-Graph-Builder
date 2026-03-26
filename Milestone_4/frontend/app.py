@@ -1,3 +1,4 @@
+# PRODUCTION_VERSION: 4.5.2 (LATEST)
 import streamlit as st
 import streamlit.components.v1 as components
 from pyvis.network import Network
