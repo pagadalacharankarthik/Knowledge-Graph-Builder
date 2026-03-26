@@ -12,10 +12,8 @@ _index = None
 _model = None
 _df = None
 
-def load_vector_db(csv_path=None):
-    global _index, _model, _df
-    
-    index_path = os.path.join(os.path.dirname(__file__), 'faiss_index')
+    if csv_path is None:
+        csv_path = os.path.join(os.path.dirname(__file__), 'data', 'cleaned_enron_emails.csv')
     
     print(f"Initializing Intelligence Core (FAISS Vector Index + Metadata Store)...")
     try:

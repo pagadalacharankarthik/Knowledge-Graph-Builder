@@ -6,6 +6,9 @@ from neo4j import GraphDatabase
 from fuzzywuzzy import process
 from tqdm import tqdm
 
+import subprocess
+import sys
+
 # Connect to Neo4j
 def get_driver():
     uri = os.environ.get("NEO4J_URI", "neo4j+s://196a05d2.databases.neo4j.io")
@@ -19,7 +22,13 @@ def get_driver():
 
 def extract_entities(text, min_len=2, min_len_person=3):
     try:
-        nlp = spacy.load("en_core_web_sm")
+        # Self-healing spacy loader
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except:
+            subprocess.run([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
+            nlp = spacy.load("en_core_web_sm")
+            
         doc = nlp(str(text))
         persons, orgs, locations, dates = [], [], [], []
 
