@@ -11,7 +11,7 @@ if _backend_path not in sys.path:
     sys.path.insert(0, _backend_path)
 
 try:
-    from rag import answer_question, load_vector_db
+    from rag import answer_question
     from graph import get_top_persons, get_graph_data_for_visualization
 except ImportError as e:
     st.error(f"Backend Import Error: {e}. Backend path: {_backend_path}")
