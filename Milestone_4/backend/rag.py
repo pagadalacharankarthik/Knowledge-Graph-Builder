@@ -149,13 +149,16 @@ JSON Schema:
 4. Ensure 'extracted_entities' are genuinely present in the relevant context or answer.
 5. If the answer cannot be found in the provided context, the 'answer' field MUST be exactly 'Not found in emails'."""
 
+    # MIRROR MILESTONE 3 CONTEXT FORMAT
+    context_str = f"Emails:\n{email_ctx}\n\nGraph Relationships:\n{graph_ctx}"
+    
     try:
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system_message},
-                {"role": "user", "content": f"Question: {question}\nContext:\n{email_ctx}"}
+                {"role": "user", "content": f"Question: {question}\nContext:\n{context_str}"}
             ],
             response_format={"type": "json_object"},
             temperature=0.0
