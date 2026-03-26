@@ -23,7 +23,7 @@ st.set_page_config(
 st.markdown("""
     <style>
         .block-container {
-            padding-top: 1rem !important;
+            padding-top: 0rem !important;
             padding-bottom: 0rem !important;
             padding-left: 2rem !important;
             padding-right: 2rem !important;
@@ -33,14 +33,23 @@ st.markdown("""
             background-color: #0b0e14;
             color: #d1d5db;
         }
-        [data-testid="stHeader"] { background: rgba(0,0,0,0); }
+        [data-testid="stHeader"] {
+            background: rgba(0,0,0,0) !important;
+            visibility: hidden !important;
+            height: 0px !important;
+            min-height: 0px !important;
+        }
+        [data-testid="stToolbar"] { display: none !important; }
         
         .control-pane {
-            background: rgba(22, 28, 38, 0.7);
-            border: 1px solid #1e293b;
-            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1.5px solid rgba(56, 189, 248, 0.25);
+            border-radius: 14px;
             padding: 1.25rem;
             margin-bottom: 1rem;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.07), inset 0 1px 0 rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         .stMetric {
             background: transparent !important;
