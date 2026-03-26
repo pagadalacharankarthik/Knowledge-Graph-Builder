@@ -158,4 +158,3 @@ st.markdown("<div class='footer-pin'>DESIGNED BY CHARAN KARTHIK</div>", unsafe_a
 # Load DB on start
 if 'db_loaded' not in st.session_state:
     st.session_state.db_loaded = load_vector_db()
-""", unsafe_allow_html=True)
