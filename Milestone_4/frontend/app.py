@@ -87,23 +87,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Optimized Caching for Speed
-@st.cache_resource
-def get_resource():
-    print("Pre-loading Intelligence Core (10k Mails)...")
-    success = load_vector_db()
+@st.cache_resource(show_spinner="🛡️ Initializing Enterprise Intel Core...")
+def initialize_intelligence_engine():
+    # Force a deep reload of the RAG backend
+    import backend.rag as rag
+    import importlib
+    importlib.reload(rag)
+    success = rag.load_vector_db()
     return success
 
-# Application Header
-header_col, branding_col = st.columns([4, 1])
-with header_col:
-    st.markdown("<h2 style='margin:0; letter-spacing:-1px;'>🛡️ ENTERPRISE INTELLIGENCE SYSTEM</h2>", unsafe_allow_html=True)
-with branding_col:
-    st.markdown("<div style='text-align:right; color:#38bdf8; font-weight:700;'>VERSION: 4.2 | SPEED-PRO</div>", unsafe_allow_html=True)
-
-st.markdown("<hr style='margin: 10px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
-
 # Main Resources Injection
-db_ready = get_resource()
+db_ready = initialize_intelligence_engine()
 
 # Grid Layout
 left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
