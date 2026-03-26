@@ -256,6 +256,11 @@ with st.expander("📊 MODEL ANALYTICS & SYSTEM PERFORMANCE", expanded=False):
             if not df_metrics.empty:
                 df_metrics['time_bin'] = df_metrics['timestamp'].dt.strftime('%H:00')
                 st.bar_chart(df_metrics.groupby('time_bin').size())
+                
+        st.markdown("<br>#### 📜 Query History Log", unsafe_allow_html=True)
+        display_df = df_metrics[['timestamp', 'query', 'response_time', 'similarity_score', 'approx_accuracy']].copy()
+        display_df.sort_values('timestamp', ascending=False, inplace=True)
+        st.dataframe(display_df, use_container_width=True)
     else:
         st.info("No query metrics recorded yet. Issue a search request to generate telemetry.")
 
