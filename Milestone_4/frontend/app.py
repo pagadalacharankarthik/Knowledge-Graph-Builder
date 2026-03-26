@@ -118,177 +118,134 @@ db_ready = initialize_knowledge_core()
 
 # Topology Controls mapped below
 
-# Grid Layout
-left_pane, mid_pane, right_pane = st.columns([0.8, 1.5, 1.5], gap="medium")
+# Tabbed Interface for Professional Layout
+tab_intel, tab_analytics = st.tabs(["🔎 INTELLIGENCE HUB", "📈 ADVANCED ANALYTICS"])
 
-# 1. ANALYTICS PANE
-with left_pane:
+with tab_intel:
+    # 1. TOP-LEVEL KPI ROW
     st.markdown('<div class="control-pane">', unsafe_allow_html=True)
-    st.markdown("#### 📊 ARCHIVE STATUS")
     kpis = get_kpis()
-    ma, mb, mc = st.columns(3)
-    with ma: st.metric("CORPUS", "10K")
-    with mb: st.metric("PEOPLE", kpis.get("persons", "0"))
-    with mc: st.metric("ORGS", kpis.get("orgs", "0"))
-    md, me, mf = st.columns(3)
-    with md: st.metric("NODES", kpis.get("nodes", "0"))
-    with me: st.metric("EDGES", kpis.get("edges", "0"))
-    with mf: st.metric("LOCS", kpis.get("locations", "0"))
-    
-    st.markdown("<br>#### 🏆 TOP ENTITIES", unsafe_allow_html=True)
-    import pandas as pd  # type: ignore
-    t1, t2 = st.tabs(["PEOPLE", "ORGS"])
-    with t1:
-        leaders = get_top_entities("PERSON", limit=10)
-        if leaders:
-            df_people = pd.DataFrame(leaders)
-            st.bar_chart(df_people.set_index('name')['connections'], height=250)
-    with t2:
-        orgs = get_top_entities("ORG", limit=10)
-        if orgs:
-            df_orgs = pd.DataFrame(orgs)
-            st.bar_chart(df_orgs.set_index('name')['connections'], height=250)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔄 REBOOT SYSTEM"):
-        st.cache_resource.clear()
-        st.session_state.clear()
-        st.rerun()
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    c1.metric("CORPUS", "10K")
+    c2.metric("PEOPLE", kpis.get("persons", "0"))
+    c3.metric("ORGS", kpis.get("orgs", "0"))
+    c4.metric("NODES", kpis.get("nodes", "0"))
+    c5.metric("EDGES", kpis.get("edges", "0"))
+    c6.metric("LOCS", kpis.get("locations", "0"))
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 2. DISCOVERY PANE
-with mid_pane:
-    st.markdown('<div class="control-pane">', unsafe_allow_html=True)
-    st.markdown("#### 🔍 CONTEXTUAL SEARCH")
-    query = st.text_input("QUERY_INPUT", placeholder="Request analysis...", label_visibility="collapsed")
-    if st.button("EXECUTE"):
-        if query:
-            if db_ready:
-                with st.spinner("Synthesizing..."):
-                    res = answer_question(query)
-                    st.markdown("#### 💡 SYSTEM RESPONSE (JSON)")
-                    
-                    # Dynamic Diagnosis info (Busts the 'Empty Data' mystery)
-                    db_rows = res.get('db_rows', 0)
-                    st.sidebar.markdown(f"**Intelligence Core Status:** {'🟢 ACTIVE' if db_rows > 0 else '🔴 EMPTY'}")
-                    st.sidebar.write(f"Total Mails: {db_rows:,}")
-
-                    # Display the exact fields the user expects from Milestone 3
-                    output_display = {
-                        "question": res.get("question", query),
-                        "answer": res.get("answer"),
-                        "extracted_entities": res.get("extracted_entities", []),
-                        "retrieved_emails_count": len(res.get("retrieved_emails", [])),
-                        "retrieval_latency_seconds": res.get("retrieval_latency_seconds", 0.0),
-                        "database_total_rows": db_rows
-                    }
-                    st.json(output_display)
-                    
-                    with st.expander("🛠️ NEURAL TRACE (Vector + Graph Verification)"):
-                        st.markdown("**Semantically Retrieved from FAISS Vector DB:**")
-                        for idx, email in enumerate(res.get('retrieved_emails', [])):
-                            st.info(f"Email {idx+1}: {email[:200]}...")
+    # 2. MAIN WORKSPACE
+    col_search, col_graph = st.columns([1, 1], gap="medium")
+    
+    with col_search:
+        st.markdown('<div class="control-pane" style="min-height: 600px;">', unsafe_allow_html=True)
+        st.markdown("#### 🔍 CONTEXTUAL SEARCH")
+        query = st.text_input("QUERY_INPUT", placeholder="Request analysis...", label_visibility="collapsed")
+        if st.button("EXECUTE SEARCH"):
+            if query:
+                if db_ready:
+                    with st.spinner("Synthesizing..."):
+                        res = answer_question(query)
+                        st.markdown("#### 💡 SYSTEM RESPONSE")
                         
-                        st.markdown("**Retrieved from Neo4j Knowledge Graph:**")
-                        if res.get('retrieved_graph'):
-                            st.success("\n".join(res['retrieved_graph']))
-                        else:
-                            st.warning("No direct graph relationships found for this specific entity.")
+                        output_display = {
+                            "answer": res.get("answer"),
+                            "entities_found": len(res.get("extracted_entities", [])),
+                            "latency": f"{res.get('retrieval_latency_seconds', 0.0):.2f}s"
+                        }
+                        st.json(output_display)
+                        
+                        with st.expander("🛠️ NEURAL TRACE", expanded=True):
+                            t1, t2 = st.tabs(["📧 CONTEXT", "🕸️ GRAPH"])
+                            with t1:
+                                for idx, email in enumerate(res.get('retrieved_emails', [])):
+                                    st.info(f"Ref {idx+1}: {email[:300]}...")
+                            with t2:
+                                if res.get('retrieved_graph'):
+                                    st.code("\n".join(res['retrieved_graph']))
+                else:
+                    st.error("System Calibration Required.")
+        else:
+            st.info("AI Core Standby. Enter query parameters.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-                    t1, t2 = st.tabs(["📧 FULL CONTEXT", "🕸️ GRAPH VIEW"])
-                    with t1:
-                        if res.get('retrieved_emails'):
-                            for e in res['retrieved_emails'][:3]:
-                                st.markdown(f"<div style='font-size:0.8rem; opacity:0.7; padding:8px; border-bottom:1px solid #1e293b;'>{e[:400]}...</div>", unsafe_allow_html=True)
-                    with t2:
-                        if res.get('retrieved_graph'):
-                            st.code("\n".join(res['retrieved_graph']), language="text")
-            else:
-                st.error("System Initialization Failed. Click Reboot.")
-    else:
-        st.info("System Ready. Enter parameters.")
-    st.markdown('</div>', unsafe_allow_html=True)
+    with col_graph:
+        st.markdown('<div class="control-pane" style="min-height: 600px;">', unsafe_allow_html=True)
+        st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
+        # Inline Controls
+        g1, g2 = st.columns(2)
+        with g1: node_limit = st.slider("Node Density", 10, 500, 150)
+        with g2: entity_filter = st.selectbox("Entity Type", ["ALL", "PERSON", "ORG", "LOCATION"])
+        
+        nodes, edges = get_graph_data_for_visualization(limit=node_limit, filter_label=entity_filter)
+        if nodes:
+            top_node = get_most_connected_nodes(limit=1)
+            top_name = top_node[0]['name'] if top_node else None
+            net = Network(height="450px", width="100%", bgcolor="transparent", font_color="#38bdf8")
+            net.force_atlas_2based()
+            colors = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399"}
+            for n, l in nodes:
+                net.add_node(n, label=n, color=colors.get(l, "#f472b6"), size=30 if n == top_name else 15)
+            for s, t in edges: net.add_edge(s, t, color="rgba(56, 189, 248, 0.1)")
+            
+            path = os.path.join(os.path.dirname(__file__), "temp_graph_intel.html")
+            net.save_graph(path)
+            with open(path, "r", encoding="utf-8") as f: components.html(f.read(), height=460)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# 3. VISUALIZATION PANE
-with right_pane:
-    st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+with tab_analytics:
+    # 1. ENTITY & DATA INSIGHTS
+    st.markdown("### 📊 DATASET & NETWORK INSIGHTS")
+    a1, a2 = st.columns(2)
     
-    st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
-    fcol1, fcol2 = st.columns(2)
-    with fcol1: node_limit = st.slider("Node Density", min_value=10, max_value=500, value=150, step=50, help="Higher density shows more relationships but may slow the browser.")
-    with fcol2: entity_filter = st.selectbox("Entity Filter", ["ALL", "PERSON", "ORG", "LOCATION"])
-    nodes, edges = get_graph_data_for_visualization(limit=node_limit, filter_label=entity_filter)
-    if nodes:
-        top_node = get_most_connected_nodes(limit=1)
-        top_name = top_node[0]['name'] if top_node else None
-        
-        net = Network(height="460px", width="100%", bgcolor="transparent", font_color="#d1d5db")
-        net.force_atlas_2based()
-        color_map = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399", "DATE": "#fbbf24"}
-        for n, l in nodes:
-            node_size = 35 if n == top_name else 15
-            net.add_node(n, label=n, color=color_map.get(l, "#f472b6"), size=node_size)
-        for s, t in edges:
-            net.add_edge(s, t, color="#1e293b")
-        
-        path = os.path.join(os.path.dirname(__file__), "temp_graph.html")
-        net.save_graph(path)
-        with open(path, "r", encoding="utf-8") as f:
-            html_data = f.read()
-        components.html(html_data, height=480)
-    else:
-        st.warning("Awaiting Graph Node Load")
-    st.markdown('</div>', unsafe_allow_html=True)
+    with a1:
+        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+        st.markdown("#### 🏆 TOP ENTITIES (MENTIONS)")
+        at1, at2 = st.tabs(["PEOPLE", "ORGANIZATIONS"])
+        with at1:
+            p_data = get_top_entities("PERSON", 10)
+            if p_data: st.bar_chart(pd.DataFrame(p_data).set_index('name')['connections'])
+        with at2:
+            o_data = get_top_entities("ORG", 10)
+            if o_data: st.bar_chart(pd.DataFrame(o_data).set_index('name')['connections'])
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# 4. MODEL ANALYTICS SECTION
-st.markdown("<div style='margin-top: 2rem;'></div>", unsafe_allow_html=True)
-with st.expander("📊 MODEL ANALYTICS & SYSTEM PERFORMANCE", expanded=False):
+    with a2:
+        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
+        st.markdown("#### 🕸️ NETWORK CENTRALITY")
+        central_nodes = get_most_connected_nodes(10)
+        st.table(pd.DataFrame(central_nodes))
+        
+        st.markdown("#### 📧 EMAIL LENGTH DISTRIBUTION")
+        estats = get_email_stats()
+        if estats:
+            dist = pd.DataFrame(list(estats["word_count_distribution"].items()), columns=["Words", "Count"])
+            st.bar_chart(dist.set_index("Words"))
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # 2. PERFORMANCE & HISTORY
+    st.markdown("### 📈 SYSTEM PERFORMANCE & AUDIT LOGS")
     metrics_data = load_metrics()
     if metrics_data:
-        import pandas as pd  # type: ignore
-        df_metrics = pd.DataFrame(metrics_data)
-        df_metrics['timestamp'] = pd.to_datetime(df_metrics['timestamp'])
+        dfm = pd.DataFrame(metrics_data)
+        dfm['timestamp'] = pd.to_datetime(dfm['timestamp'])
         
-        avg_rt = df_metrics['response_time'].mean()
-        avg_acc = df_metrics['approx_accuracy'].mean()
+        m_col1, m_col2, m_col3 = st.columns(3)
+        m_col1.metric("Avg Response", f"{dfm['response_time'].mean():.2f}s")
+        m_col2.metric("Avg Quality", f"{dfm['approx_accuracy'].mean():.1f}%")
+        m_col3.metric("Total Sessions", len(dfm))
         
-        st.markdown("#### Key Performance Indicators")
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Total Queries", len(df_metrics))
-        m2.metric("Avg Response Time", f"{avg_rt:.2f}s")
-        m3.metric("Avg Approximated Accuracy", f"{avg_acc:.1f}%")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Response Time Trend (Seconds)**")
-            st.line_chart(df_metrics.set_index('timestamp')['response_time'])
-            
-            st.markdown("**Retrieval Count Distribution**")
-            st.bar_chart(df_metrics['retrieved_docs_count'].value_counts())
-            
-        with c2:
-            st.markdown("**Similarity Score Trend (FAISS Distance)**")
-            st.line_chart(df_metrics.set_index('timestamp')['similarity_score'])
-            
-            st.markdown("**Query Volume Over Time**")
-            if not df_metrics.empty:
-                df_metrics['time_bin'] = df_metrics['timestamp'].dt.strftime('%H:00')
-                st.bar_chart(df_metrics.groupby('time_bin').size())
-                
-        st.markdown("<br>#### 📜 Query History Log", unsafe_allow_html=True)
-        display_df = df_metrics[['timestamp', 'query', 'response_time', 'similarity_score', 'approx_accuracy']].copy()
-        display_df.sort_values('timestamp', ascending=False, inplace=True)
-        st.dataframe(display_df, use_container_width=True)
+        with c1: st.line_chart(dfm.set_index('timestamp')['response_time'])
+        with c2: st.line_chart(dfm.set_index('timestamp')['similarity_score'])
         
-        st.markdown("<br>#### 📧 Email Insights", unsafe_allow_html=True)
-        stats = get_email_stats()
-        if stats and "word_count_distribution" in stats:
-            st.markdown("**Word Count Distribution**")
-            df_dist = pd.DataFrame(list(stats["word_count_distribution"].items()), columns=["Length", "Count"])
-            st.bar_chart(df_dist.set_index('Length'))
-    else:
-        st.info("No query metrics recorded yet. Issue a search request to generate telemetry.")
+        st.markdown("#### 📜 RECENT QUERY HISTORY")
+        st.dataframe(dfm.sort_values('timestamp', ascending=False), use_container_width=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔄 FULL SYSTEM REBOOT"):
+        st.cache_resource.clear()
+        st.rerun()
 
 # Fixed Branding
 st.markdown("<div class='footer-pin'>BUILD BY CHARAN KARTHIK</div>", unsafe_allow_html=True)
