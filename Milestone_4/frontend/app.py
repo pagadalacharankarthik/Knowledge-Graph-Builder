@@ -49,23 +49,22 @@ st.markdown("""
         }
         [data-testid="stToolbar"] { display: none !important; }
         
-        .control-pane {
-            background: rgba(15, 23, 42, 0.85);
-            border: 1.5px solid rgba(56, 189, 248, 0.25);
-            border-radius: 14px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.07), inset 0 1px 0 rgba(255,255,255,0.04);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+        /* Target Streamlit containers to look like control-pane */
+        [data-testid="stElementContainer"] > div:has(div[data-testid="stVerticalBlockBorderWrapper"]) {
+            background: rgba(15, 23, 42, 0.85) !important;
+            border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
+            border-radius: 14px !important;
+            padding: 0.5rem !important;
+            margin-bottom: 1rem !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.07) !important;
+            backdrop-filter: blur(12px) !important;
         }
         .stMetric {
             background: transparent !important;
-            padding: 0 !important;
         }
         .stMetric [data-testid="stMetricValue"] {
             color: #38bdf8 !important;
-            font-size: 1.8rem !important;
+            font-size: 1.6rem !important;
         }
         .stButton button {
             background: #38bdf8;
@@ -77,11 +76,10 @@ st.markdown("""
             border: none;
         }
         .answer-area {
-            background: rgba(56, 189, 248, 0.05);
-            border-left: 3px solid #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid #38bdf8;
             padding: 15px;
-            border-radius: 4px;
-            font-size: 0.95rem;
+            border-radius: 8px;
             margin-top: 10px;
         }
         .footer-pin {
@@ -125,72 +123,68 @@ with tab_intel:
     
     with col_left:
         # Box 1: KPI Summary
-        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
-        st.markdown("#### 📧 ARCHIVE STATUS")
-        k1, k2, k3 = st.columns(3)
-        k1.metric("CORPUS", "10K")
-        k2.metric("PEOPLE", kpis.get("persons", "0"))
-        k3.metric("ORGS", kpis.get("orgs", "0"))
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("#### 📧 ARCHIVE STATUS")
+            k1, k2, k3 = st.columns(3)
+            k1.metric("CORPUS", "10K")
+            k2.metric("PEOPLE", kpis.get("persons", "0"))
+            k3.metric("ORGS", kpis.get("orgs", "0"))
         
         # Box 2: Search Core
-        st.markdown('<div class="control-pane" style="min-height: 600px;">', unsafe_allow_html=True)
-        st.markdown("#### 🔍 CONTEXTUAL SEARCH")
-        query = st.text_input("QUERY_INPUT", placeholder="Request analysis...", label_visibility="collapsed")
-        if st.button("EXECUTE SEARCH"):
-            if query:
-                if db_ready:
-                    with st.spinner("Synthesizing..."):
-                        res = answer_question(query)
-                        st.markdown(f"""
-                            <div class="answer-area">
-                                <h4 style='margin:0; color:#38bdf8;'>💡 SYSTEM RESPONSE</h4>
-                                <p style='margin-top:10px;'>{res.get('answer')}</p>
-                                <span style='font-size:0.8rem; opacity:0.6;'>Latency: {res.get('retrieval_latency_seconds', 0.0):.2f}s | Entities: {len(res.get('extracted_entities', []))}</span>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        with st.expander("🛠️ NEURAL TRACE (Vector + Graph Audit)", expanded=True):
-                            for idx, email in enumerate(res.get('retrieved_emails', [])):
-                                st.info(f"REFERENCE {idx+1}: {email[:200]}...")
-                            if res.get('retrieved_graph'):
-                                st.success("\n".join(res['retrieved_graph']))
-        else:
-            st.info("AI Core Standby. Enter query.")
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("#### 🔍 CONTEXTUAL SEARCH")
+            query = st.text_input("QUERY_INPUT", placeholder="Request analysis...", label_visibility="collapsed")
+            if st.button("EXECUTE SEARCH"):
+                if query:
+                    if db_ready:
+                        with st.spinner("Synthesizing..."):
+                            res = answer_question(query)
+                            st.markdown(f"""
+                                <div class="answer-area">
+                                    <h4 style='margin:0; color:#38bdf8;'>💡 SYSTEM RESPONSE</h4>
+                                    <p style='margin-top:10px;'>{res.get('answer')}</p>
+                                    <span style='font-size:0.8rem; opacity:0.6;'>Latency: {res.get('retrieval_latency_seconds', 0.0):.2f}s | Entities: {len(res.get('extracted_entities', []))}</span>
+                                </div>
+                            """, unsafe_allow_html=True)
+                            
+                            with st.expander("🛠️ NEURAL TRACE (Vector + Graph Audit)", expanded=True):
+                                for idx, email in enumerate(res.get('retrieved_emails', [])):
+                                    st.info(f"REFERENCE {idx+1}: {email[:200]}...")
+                                if res.get('retrieved_graph'):
+                                    st.success("\n".join(res['retrieved_graph']))
+            else:
+                st.info("AI Core Standby. Enter query.")
 
     with col_right:
         # Box 3: Topology Summary
-        st.markdown('<div class="control-pane">', unsafe_allow_html=True)
-        st.markdown("#### 🕸️ TOPOLOGY STATUS")
-        k4, k5, k6 = st.columns(3)
-        k4.metric("NODES", kpis.get("nodes", "0"))
-        k5.metric("EDGES", kpis.get("edges", "0"))
-        k6.metric("LOCS", kpis.get("locations", "0"))
-        st.markdown('</div>', unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("#### 🕸️ TOPOLOGY STATUS")
+            k4, k5, k6 = st.columns(3)
+            k4.metric("NODES", kpis.get("nodes", "0"))
+            k5.metric("EDGES", kpis.get("edges", "0"))
+            k6.metric("LOCS", kpis.get("locations", "0"))
         
         # Box 4: Topology Viewer
-        st.markdown('<div class="control-pane" style="min-height: 600px;">', unsafe_allow_html=True)
-        st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
-        g1, g2 = st.columns(2)
-        with g1: node_limit = st.slider("Node Density", 10, 500, 150)
-        with g2: entity_filter = st.selectbox("Entity Type", ["ALL", "PERSON", "ORG", "LOCATION"])
-        
-        nodes, edges = get_graph_data_for_visualization(limit=node_limit, filter_label=entity_filter)
-        if nodes:
-            top_node = get_most_connected_nodes(limit=1)
-            top_name = top_node[0]['name'] if top_node else None
-            net = Network(height="450px", width="100%", bgcolor="transparent", font_color="#38bdf8")
-            net.force_atlas_2based()
-            colors = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399"}
-            for n, l in nodes:
-                net.add_node(n, label=n, color=colors.get(l, "#f472b6"), size=30 if n == top_name else 15)
-            for s, t in edges: net.add_edge(s, t, color="rgba(56, 189, 248, 0.1)")
+        with st.container(border=True):
+            st.markdown("#### 🕸️ TOPOLOGY OVERVIEW")
+            g1, g2 = st.columns(2)
+            with g1: node_limit = st.slider("Node Density", 10, 500, 150)
+            with g2: entity_filter = st.selectbox("Entity Type", ["ALL", "PERSON", "ORG", "LOCATION"])
             
-            path = os.path.join(os.path.dirname(__file__), "temp_graph_intel.html")
-            net.save_graph(path)
-            with open(path, "r", encoding="utf-8") as f: components.html(f.read(), height=480)
-        st.markdown('</div>', unsafe_allow_html=True)
+            nodes, edges = get_graph_data_for_visualization(limit=node_limit, filter_label=entity_filter)
+            if nodes:
+                top_node = get_most_connected_nodes(limit=1)
+                top_name = top_node[0]['name'] if top_node else None
+                net = Network(height="450px", width="100%", bgcolor="transparent", font_color="#38bdf8")
+                net.force_atlas_2based()
+                colors = {"PERSON": "#38bdf8", "ORG": "#818cf8", "LOCATION": "#34d399"}
+                for n, l in nodes:
+                    net.add_node(n, label=n, color=colors.get(l, "#f472b6"), size=30 if n == top_name else 15)
+                for s, t in edges: net.add_edge(s, t, color="rgba(56, 189, 248, 0.1)")
+                
+                path = os.path.join(os.path.dirname(__file__), "temp_graph_intel.html")
+                net.save_graph(path)
+                with open(path, "r", encoding="utf-8") as f: components.html(f.read(), height=480)
 
 with tab_analytics:
     # 1. ENTITY & DATA INSIGHTS
