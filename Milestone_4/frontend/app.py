@@ -4,7 +4,7 @@ from pyvis.network import Network
 import os
 import sys
 
-# Add backend to path to allow importing modules
+# Add backend to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
 
 from rag import answer_question, load_vector_db
@@ -12,13 +12,13 @@ from graph import get_top_persons, get_graph_data_for_visualization
 
 # Setup UI page configuration
 st.set_page_config(
-    page_title="Intelligence Hub - Enron Graph",
+    page_title="Enterprise Intelligence Hub",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Compact Control Center UI (Modern Dark Mode)
+# Compact Control Center UI
 st.markdown("""
     <style>
         .block-container {
@@ -39,7 +39,7 @@ st.markdown("""
             border: 1px solid #1e293b;
             border-radius: 12px;
             padding: 1.25rem;
-            height: 100%;
+            margin-bottom: 1rem;
         }
         .stMetric {
             background: transparent !important;
@@ -75,6 +75,12 @@ st.markdown("""
             font-weight: 900;
             letter-spacing: 1px;
             text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+            z-index: 100;
+        }
+        /* Tab height optimization */
+        .stTabs [data-baseweb="tab-panel"] {
+            max-height: 200px;
+            overflow-y: auto;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -84,7 +90,7 @@ header_col, branding_col = st.columns([4, 1])
 with header_col:
     st.markdown("<h2 style='margin:0; letter-spacing:-1px;'>🛡️ ENTERPRISE INTELLIGENCE SYSTEM</h2>", unsafe_allow_html=True)
 with branding_col:
-    st.markdown("<div style='text-align:right; color:#38bdf8; font-weight:700;'>GEN: IV | STABLE</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:right; color:#38bdf8; font-weight:700;'>VERSION: 4.1 | STABLE</div>", unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 10px 0; border-color: #1e293b;'>", unsafe_allow_html=True)
 
@@ -104,6 +110,11 @@ with left_pane:
     if leaders:
         for l in leaders:
             st.markdown(f"<div style='font-size:0.85rem; margin-bottom:6px;'>{l['name'].title()} <span style='float:right; color:#38bdf8;'>{l['connections']}</span></div>", unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔄 REBOOT SYSTEM"):
+        st.session_state.clear()
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # 2. DISCOVERY PANE
@@ -120,11 +131,11 @@ with mid_pane:
                 
                 t1, t2 = st.tabs(["📧 SOURCE TEXT", "🕸️ GRAPH DATA"])
                 with t1:
-                    if res['retrieved_emails']:
+                    if res.get('retrieved_emails'):
                         for e in res['retrieved_emails'][:2]:
-                            st.markdown(f"<div style='font-size:0.8rem; opacity:0.7; padding:8px; border-bottom:1px solid #1e293b;'>{e[:300]}...</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='font-size:0.8rem; opacity:0.7; padding:8px; border-bottom:1px solid #1e293b;'>{e[:250]}...</div>", unsafe_allow_html=True)
                 with t2:
-                    if res['retrieved_graph']:
+                    if res.get('retrieved_graph'):
                         st.code("\n".join(res['retrieved_graph'][:4]), language="text")
     else:
         st.info("System Ready. Enter parameters.")
@@ -146,8 +157,8 @@ with right_pane:
         path = os.path.join(os.path.dirname(__file__), "temp_graph.html")
         net.save_graph(path)
         with open(path, "r", encoding="utf-8") as f:
-            html = f.read()
-        components.html(html, height=480)
+            html_data = f.read()
+        components.html(html_data, height=480)
     else:
         st.warning("Awaiting Graph Node Load")
     st.markdown('</div>', unsafe_allow_html=True)

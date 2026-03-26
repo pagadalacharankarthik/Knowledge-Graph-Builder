@@ -38,7 +38,7 @@ def load_vector_db(csv_path=None):
     if not found_col:
         # Fallback to the first object/string column that isn't ID-like
         for col in _df.columns:
-            if _df[col].dtype == 'object':
+            if _df[col].dtype == 'object' and "id" not in col.lower():
                 found_col = col
                 break
     
@@ -80,36 +80,56 @@ def load_vector_db(csv_path=None):
 
 def retrieve_context(question):
     global _df, _index, _model
+    
+    # 1. Mandatory Singleton Check
     if _index is None or _model is None or _df is None:
         if not load_vector_db():
             return [], []
             
-    # CRITICAL: Ensure normalized_entities exists just-in-time
-    if "normalized_entities" not in _df.columns:
-        print("Recovering missing columns just-in-time...")
-        if "entities" in _df.columns:
-            _df["normalized_entities"] = _df["entities"].apply(lambda e: e if isinstance(e, list) else (str(e).split(",") if isinstance(e, str) else []))
-        else:
+    # 2. Schema Guard (Run every time to be 100% sure)
+    try:
+        if "normalized_entities" not in _df.columns:
             _df["normalized_entities"] = [[] for _ in range(len(_df))]
+        if "clean_message" not in _df.columns:
+            # Last resort: find first object column
+            for c in _df.columns:
+                if _df[c].dtype == 'object':
+                    _df["clean_message"] = _df[c].astype(str)
+                    break
+    except: pass
 
-    query_vector = _model.encode([question])
-    distances, indices = _index.search(query_vector, 3) 
+    # 3. Retrieval
+    try:
+        query_vector = _model.encode([str(question)])
+        distances, indices = _index.search(query_vector, 3) 
+        matched_rows = _df.iloc[indices[0]]
+    except Exception as e:
+        print(f"Retrieval Logic Error: {e}")
+        return [], []
     
-    matched_rows = _df.iloc[indices[0]]
-    email_context = matched_rows["clean_message"].tolist() if "clean_message" in matched_rows.columns else []
+    # 4. Content Extraction
+    email_context = []
+    if "clean_message" in matched_rows.columns:
+        email_context = matched_rows["clean_message"].tolist()
     
-    # Defensive entity extraction
-    top_entities = []
-    if not matched_rows.empty and "normalized_entities" in matched_rows.columns:
-        top_entities = matched_rows["normalized_entities"].iloc[0]
-        if not isinstance(top_entities, list): top_entities = []
-    
+    # 5. Entity & Graph Extraction
     graph_context = []
-    if len(top_entities) > 0:
-        try:
-            graph_context = get_graph_context(top_entities[0])
-        except:
-            graph_context = []
+    try:
+        # Use column indexing instead of name access for maximum safety
+        if "normalized_entities" in matched_rows.columns:
+            col_pos = matched_rows.columns.get_loc("normalized_entities")
+            top_entities = matched_rows.iloc[0, col_pos]
+            if isinstance(top_entities, list) and len(top_entities) > 0:
+                graph_context = get_graph_context(top_entities[0])
+            elif isinstance(top_entities, str):
+                # Handle stringified lists from CSV
+                try:
+                    ents = eval(top_entities)
+                    if isinstance(ents, list) and len(ents) > 0:
+                        graph_context = get_graph_context(ents[0])
+                except: pass
+    except:
+        pass
             
     return email_context, graph_context
 
@@ -117,61 +137,30 @@ def answer_question(question):
     try:
         email_ctx, graph_ctx = retrieve_context(question)
     except Exception as e:
-        print(f"Retrieval Error: {e}")
-        return {"answer": f"Error during retrieval: {e}", "retrieved_emails": [], "retrieved_graph": []}
+        return {"answer": f"System Busy. Error: {e}", "retrieved_emails": [], "retrieved_graph": []}
     
     if not email_ctx:
-        return {"answer": "Not found in retrieved data.", "retrieved_emails": [], "retrieved_graph": []}
+        return {"answer": "No records found for this query.", "retrieved_emails": [], "retrieved_graph": []}
         
-    context_str = f"Emails:\n{email_ctx}\n\nGraph Relationships:\n{graph_ctx}"
+    context_str = f"Context:\n{email_ctx}\n\nGraph:\n{graph_ctx}"
     
     api_key = os.environ.get("LLM_API_KEY")
+    if not api_key:
+        return {"answer": "LLM_API_KEY missing in Environment.", "retrieved_emails": email_ctx, "retrieved_graph": graph_ctx}
+        
     try:
         client = Groq(api_key=api_key)
-    except Exception as e:
-        return {"answer": f"API Error: {e}", "retrieved_emails": email_ctx, "retrieved_graph": graph_ctx}
-    
-    system_message = """You are an enterprise email analysis assistant.
-Your task is to answer user questions based *only* on the provided email context and graph relationships.
-You MUST output your answer in a strict JSON format, and ONLY the JSON object. Do not include any other text, explanations, or formatting outside the JSON object.
-
-JSON Schema:
-{
-  "answer": "Your comprehensive answer based *only* on the provided context. If the information is not found, state EXACTLY 'Not found in retrieved data'.",
-  "extracted_entities": ["List of relevant entities (e.g., names, companies) mentioned in the answer. Empty list if none."]
-}
-
-# Rules:
-1. Do not use external knowledge.
-2. Do not assume anything not explicitly stated in the provided context.
-3. Your 'answer' should be concise and directly address the 'question' using the provided 'Email Context' and 'Graph Relationships'.
-4. Ensure 'extracted_entities' are genuinely present in the relevant context or answer.
-5. If the answer cannot be found in the provided context, the 'answer' field MUST be exactly 'Not found in retrieved data'."""
-    
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        chat_completion = client.chat.completions.create(
             messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": f"Question: {question}\nContext:\n{context_str}"}
+                {"role": "system", "content": "You are a professional Intelligence Analyst. Answer based ONLY on provided context. Be concise."},
+                {"role": "user", "content": f"Query: {question}\n\n{context_str}"}
             ],
-            response_format={"type": "json_object"},
-            temperature=0.0
+            model="mixtral-8x7b-32768",
         )
-        
-        result_content = response.choices[0].message.content
-        result_json = json.loads(result_content)
-        
-        # Enforce rule over hallucination
-        if "Not found in retrieved data" in result_json.get("answer", ""):
-            result_json["answer"] = "Not found in retrieved data."
-            
+        return {
+            "answer": chat_completion.choices[0].message.content,
+            "retrieved_emails": email_ctx,
+            "retrieved_graph": graph_ctx
+        }
     except Exception as e:
-        result_json = {"answer": f"Error generating answer: {e}", "extracted_entities": []}
-        
-    return {
-        "answer": result_json.get("answer", "Not found in retrieved data."),
-        "extracted_entities": result_json.get("extracted_entities", []),
-        "retrieved_emails": email_ctx,
-        "retrieved_graph": graph_ctx
-    }
+        return {"answer": f"LLM Error: {e}", "retrieved_emails": email_ctx, "retrieved_graph": graph_ctx}
