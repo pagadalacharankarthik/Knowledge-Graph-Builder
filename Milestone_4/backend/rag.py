@@ -29,15 +29,13 @@ def load_vector_db(csv_path=None):
     if 'clean_message' not in _df.columns and 'message' in _df.columns:
         _df['clean_message'] = _df['message'].astype(str)
     
-    # Ensure entity columns exist even if not in CSV
-    if 'entities' not in _df.columns:
-        print("Extracting entities for RAG context...")
-        def naive_extract(text):
-            return list(set([w for w in str(text).split() if w.istitle()][:5]))
-        _df['entities'] = _df['clean_message'].apply(naive_extract)
-    
+    # NEW: Safety check - ensure normalized_entities exists globally
     if 'normalized_entities' not in _df.columns:
-        _df['normalized_entities'] = _df['entities'].apply(lambda e: e if isinstance(e, list) else (e.split(",") if isinstance(e, str) else []))
+        if 'entities' in _df.columns:
+            _df['normalized_entities'] = _df['entities'].apply(lambda e: e if isinstance(e, list) else (str(e).split(",") if isinstance(e, str) else []))
+        else:
+            _df['entities'] = [[] for _ in range(len(_df))]
+            _df['normalized_entities'] = [[] for _ in range(len(_df))]
 
     # Pre-process search text
     _df["search_text"] = _df["clean_message"].astype(str)
@@ -73,8 +71,12 @@ def retrieve_context(question):
     matched_rows = _df.iloc[indices[0]]
     email_context = matched_rows["clean_message"].tolist()
     
-    # Extract entities from the top result
-    top_entities = matched_rows["normalized_entities"].iloc[0]
+    # Safety check for column existence
+    if "normalized_entities" not in matched_rows.columns:
+        top_entities = []
+    else:
+        top_entities = matched_rows["normalized_entities"].iloc[0] if not matched_rows.empty else []
+    
     graph_context = []
     
     if len(top_entities) > 0:
@@ -83,7 +85,11 @@ def retrieve_context(question):
     return email_context, graph_context
 
 def answer_question(question):
-    email_ctx, graph_ctx = retrieve_context(question)
+    try:
+        email_ctx, graph_ctx = retrieve_context(question)
+    except Exception as e:
+        print(f"Retrieval Error: {e}")
+        return {"answer": f"Error during retrieval: {e}", "retrieved_emails": [], "retrieved_graph": []}
     
     if not email_ctx:
         return {"answer": "Not found in retrieved data.", "retrieved_emails": [], "retrieved_graph": []}

@@ -78,182 +78,153 @@ st.markdown("""
 
 # Main Title
 st.markdown("<h1>🧠 AI Knowledge Graph Dashboard</h1>", unsafe_allow_html=True)
-st.markdown("Query the Enron dataset through an advanced Retrieval-Augmented Generation (RAG) and Neo4j Knowledge Graph system.")
-
-# Custom Premium UI (Dark Slate & Electric Blue)
+st.markdown("Query the Enron dataset through an advanced Retrieval-Augmented Generation (RAG) and Neo4j Knowledge Graph syste# Compact Glassmorphism UI (Dark Control Center)
 st.markdown("""
     <style>
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+            max-width: 100% !important;
+        }
         .main {
-            background-color: #0f172a;
-            color: #f1f5f9;
-            font-family: 'Inter', sans-serif;
+            background-color: #0c0f16;
+            color: #e2e8f0;
+            overflow: hidden;
         }
         [data-testid="stSidebar"] {
-            background-color: #1e293b;
-            border-right: 1px solid #334155;
+            background-color: #141b26;
+            border-right: 1px solid #1e293b;
+        }
+        .compact-card {
+            background: rgba(20, 27, 38, 0.6);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
         }
         .stMetric {
-            background-color: #1e293b !important;
-            border: 1px solid #334155 !important;
-            padding: 15px !important;
-            border-radius: 12px !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
         }
         .stMetric [data-testid="stMetricValue"] {
+            font-size: 1.4rem !important;
             color: #38bdf8 !important;
         }
-        .query-card {
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid #334155;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-        }
-        .answer-highlight {
-            background: linear-gradient(90deg, #1e293b, #0f172a);
-            border-left: 4px solid #38bdf8;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 15px 0;
-            color: #e2e8f0;
-            line-height: 1.6;
+        .stMetric [data-testid="stMetricLabel"] {
+            font-size: 0.8rem !important;
+            opacity: 0.7;
         }
         .stButton button {
-            background: linear-gradient(135deg, #38bdf8, #1d4ed8);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-        .stButton button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
-        }
-        .footer-branding {
-            text-align: center;
-            padding: 40px 0;
-            color: #64748b;
-            font-size: 0.9em;
-            letter-spacing: 1px;
-        }
-        .highlight-name {
-            color: #38bdf8;
+            background: #38bdf8;
+            color: #000;
             font-weight: 700;
-            text-transform: uppercase;
+            border-radius: 4px;
+            height: 38px;
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+        .footer-compact {
+            position: fixed;
+            bottom: 5px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            font-weight: 800;
+            letter-spacing: 1px;
+            z-index: 99;
         }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
+        /* Custom Scrollbars for small containers */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        
+        /* Ensure specific containers don't cause page scroll */
+        .stTabs [data-baseweb="tab-panel"] {
+            max-height: 250px;
+            overflow-y: auto;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Main Dashboard Interface
-st.title("🛡️ Enterprise Intelligence Hub")
-st.caption("AI-Powered Knowledge Graph & Contextual Search")
+# Compact Header
+h_col1, h_col2 = st.columns([3, 1])
+with h_col1:
+    st.markdown("<h2 style='margin-bottom:0;'>🛡️ INTELLIGENCE HUB</h2>", unsafe_allow_html=True)
+with h_col2:
+    st.markdown("<div style='text-align:right; padding-top:10px; opacity:0.6; font-size:0.8em;'>V2.0 STABLE</div>", unsafe_allow_html=True)
 
-# Initialize Session State
-if 'db_loaded' not in st.session_state:
-    with st.status("Initializing Knowledge Base...", expanded=True) as status:
-        st.write("Loading 10,000 email records...")
-        st.session_state.db_loaded = load_vector_db()
-        status.update(label="System Ready", state="complete", expanded=False)
+# Main Control Panes
+c1, c2, c3 = st.columns([0.8, 1.4, 1.4], gap="small")
 
-# Sidebar: Global Analytics
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=80)
-    st.title("Analytics")
-    
-    st.metric("Total Archive", "10,000 Mails")
-    st.metric("Graph Nodes", "5,000+ Entities")
-    
+# Pane 1: Analytics & Leaders (Left)
+with c1:
+    st.markdown('<div class="compact-card">', unsafe_allow_html=True)
+    st.markdown("##### 📊 ANALYTICS")
+    aa, bb = st.columns(2)
+    with aa: st.metric("CORPUS", "10K")
+    with bb: st.metric("ENTITIES", "5K+")
     st.markdown("---")
-    st.subheader("🏆 Network Leaders")
-    top_persons = get_top_persons(limit=8)
-    if top_persons:
-        for p in top_persons:
-            with st.container():
-                st.markdown(f"""
-                <div style='display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9em;'>
-                    <span>{p['name'].title()}</span>
-                    <span style='color: #38bdf8;'>{p['connections']}</span>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.info("Neo4j database not connected.")
-
-# Main Content Layout
-col_left, col_right = st.columns([1.2, 1], gap="large")
-
-with col_left:
-    st.markdown("### 🔍 Knowledge Extraction")
-    st.markdown('<div class="query-card">', unsafe_allow_html=True)
-    query = st.text_input("Consult the archive:", placeholder="Ask about entities, deals, or discussions...")
-    
-    if st.button("EXECUTE ANALYSIS"):
-        if query:
-            with st.spinner("Synthesizing answer..."):
-                res = answer_question(query)
-                st.markdown("#### 💡 AI Response")
-                st.markdown(f'<div class="answer-highlight">{res["answer"]}</div>', unsafe_allow_html=True)
-                
-                st.markdown("#### 📄 Context Retrieval")
-                tabs = st.tabs(["📧 Primary Sources", "🕸️ Graph Relations"])
-                with tabs[0]:
-                    if res['retrieved_emails']:
-                        for i, email in enumerate(res['retrieved_emails'][:3]):
-                            with st.expander(f"Source Document #{i+1}"):
-                                st.write(email)
-                    else:
-                        st.warning("No relevant emails found.")
-                with tabs[1]:
-                    if res['retrieved_graph']:
-                        for rel in res['retrieved_graph'][:10]:
-                            st.code(rel, language="text")
-                    else:
-                        st.info("No direct graph relationships identified.")
-        else:
-            st.error("Please provide a query.")
+    st.markdown("##### 🏆 TOP NODES")
+    top_p = get_top_persons(limit=6)
+    if top_p:
+        for p in top_p:
+            st.markdown(f"<div style='font-size:0.8rem;'>{p['name'].title()} <span style='color:#38bdf8; float:right;'>{p['connections']}</span></div>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-with col_right:
-    st.markdown("### 🕸️ Relationship Topology")
-    nodes, edges = get_graph_data_for_visualization(limit=50)
-    if nodes:
-        net = Network(height="550px", width="100%", bgcolor="#0f172a", font_color="#f1f5f9")
-        net.force_atlas_2based()
-        
-        for node, lbl in nodes:
-            color = "#38bdf8" if lbl == "PERSON" else "#818cf8"
-            net.add_node(node, label=node, color=color, shadow=True)
-        for src, tgt in edges:
-            net.add_edge(src, tgt, color="#334155")
-        
-        try:
-            path = os.path.join(os.path.dirname(__file__), "temp_graph.html")
-            net.save_graph(path)
-            with open(path, "r", encoding="utf-8") as f:
-                html_data = f.read()
-            components.html(html_data, height=560)
-        except Exception as e:
-            st.error(f"Visualization Error: {e}")
+# Pane 2: Query & Synthesis (Middle)
+with c2:
+    st.markdown('<div class="compact-card">', unsafe_allow_html=True)
+    st.markdown("##### 🔍 SEARCH")
+    query = st.text_input("", placeholder="Enter inquiry...", label_visibility="collapsed")
+    run = st.button("ANALYSIS")
+    
+    if run and query:
+        with st.spinner("Processing..."):
+            res = answer_question(query)
+            st.markdown("##### 💡 SYNTHESIS")
+            st.markdown(f"<div style='background:rgba(56,189,248,0.1); padding:10px; border-radius:4px; font-size:0.9rem; line-height:1.4; border-left:2px solid #38bdf8;'>{res['answer']}</div>", unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            t1, t2 = st.tabs(["📧 DOCS", "🕸️ GRAPH"])
+            with t1:
+                if res['retrieved_emails']:
+                    for e in res['retrieved_emails'][:2]:
+                        st.markdown(f"<div style='font-size:0.75rem; margin-bottom:5px; opacity:0.8;'>{e[:250]}...</div>", unsafe_allow_html=True)
+                else: st.info("Zero hits.")
+            with t2:
+                if res['retrieved_graph']:
+                    st.code("\n".join(res['retrieved_graph'][:4]), language="text")
     else:
-        st.warning("Visualization engine waiting for data...")
+        st.info("System idle. Awaiting instruction.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Footer
-st.markdown(f"""
-    <div class="footer-branding">
-        DESIGNED & BUILT BY <span class="highlight-name">Charan Karthik</span><br>
-        <span style="font-size: 0.8em; opacity: 0.6;">© 2026 Enterprise Intelligence Systems</span>
-    </div>
+# Pane 3: Topology (Right)
+with c3:
+    st.markdown('<div class="compact-card" style="height: 100%;">', unsafe_allow_html=True)
+    st.markdown("##### 🕸️ TOPOLOGY")
+    nodes, edges = get_graph_data_for_visualization(limit=35)
+    if nodes:
+        net = Network(height="480px", width="100%", bgcolor="transparent", font_color="#e2e8f0")
+        net.force_atlas_2based()
+        for node, lbl in nodes:
+            net.add_node(node, label=node, color="#38bdf8" if lbl == "PERSON" else "#818cf8")
+        for s, t in edges:
+            net.add_edge(s, t, color="#1e293b")
+        
+        path = os.path.join(os.path.dirname(__file__), "temp_graph.html")
+        net.save_graph(path)
+        with open(path, "r", encoding="utf-8") as f:
+            html = f.read()
+        components.html(html, height=490)
+    else:
+        st.warning("Topology ready.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Branding Footer (Locked to Corner)
+st.markdown("<div class='footer-compact'>BUILD BY CHARAN KARTHIK</div>", unsafe_allow_html=True)
+
+# Ensure session state for database
+if 'db_loaded' not in st.session_state:
+    st.session_state.db_loaded = load_vector_db()
+ </div>
 """, unsafe_allow_html=True)
