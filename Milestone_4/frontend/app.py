@@ -41,15 +41,7 @@ st.markdown("""
             background-color: #0b0e14;
             color: #d1d5db;
         }
-        [data-testid="stHeader"] {
-            background: rgba(0,0,0,0) !important;
-            visibility: hidden !important;
-            height: 0px !important;
-            min-height: 0px !important;
-        }
-        [data-testid="stToolbar"] { display: none !important; }
-        
-        /* Target Streamlit containers to look like control-pane */
+        /* End CSS */
         [data-testid="stElementContainer"] > div:has(div[data-testid="stVerticalBlockBorderWrapper"]) {
             background: rgba(15, 23, 42, 0.85) !important;
             border: 1.5px solid rgba(56, 189, 248, 0.25) !important;
