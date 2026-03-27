@@ -1,4 +1,4 @@
-# 🧠 AI Knowledge Graph Builder & RAG Dashboard
+# 🧠 AI KNOWLEDGE GRAPH system
 Built by **Charan Karthik**
 
 **Live Production App:** [https://knowledge-graph-builder-001.streamlit.app/](https://knowledge-graph-builder-001.streamlit.app/)
