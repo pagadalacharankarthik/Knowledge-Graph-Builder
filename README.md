@@ -3,7 +3,7 @@ Built by **Charan Karthik**
 
 **Live Production App:** [https://knowledge-graph-builder-001.streamlit.app/](https://knowledge-graph-builder-001.streamlit.app/)
 
-**Agile Project Tracking:** [Agile Intelligence Sheet](file:///C:/Users/chara/.gemini/antigravity/brain/88828f38-1366-4cca-94b4-a9407acb82c1/agile_tracking.md)
+**Agile Project Tracking:** [Agile Project Sheet (Excel)](Agile_Sheet.xlsx)
 
 ---
 
@@ -106,9 +106,10 @@ If the app is blank or answers are wrong, ensure you have updated these files in
 ---
 
 ## 🔍 Example Queries
-- *"Who is Alan Aronowitz and what is his role?"*
+- *"What were the most discussed topics in the months before the collapse?"*
 - *"Who is discussing energy trading?"*
 - *"What are the most frequent companies mentioned?"*
+- *"What are the patterns in, or most common words in, email subject lines?"*
 - *"Who is discussed in relation to the 'energy modeling forum'?"*
 - *"Are there any mentions of specific Enron Corp conferences or meeting planning?"*
 - *"What are the common topics discussed by Steffes James and Phillip K. Allen?"*
