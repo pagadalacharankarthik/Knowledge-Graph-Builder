@@ -1,4 +1,4 @@
-# Enterprise Intelligence Hub: Comprehensive Product Requirements Document (PRD)
+# Product Requirements Document (PRD): AI KNOWLEDGE GRAPH system
 
 ## 1. Project Overview & Evolution
 The **Enterprise Intelligence Hub** is a next-generation RAG (Retrieval-Augmented Generation) platform designed to parse, index, and analyze complex unstructured email data (Enron Corpus). It evolved through four critical development milestones:
