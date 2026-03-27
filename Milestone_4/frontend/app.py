@@ -172,8 +172,8 @@ with tab_intel:
                             """, unsafe_allow_html=True)
                             
                             with st.expander("🛠️ NEURAL TRACE (Vector + Graph Audit)", expanded=False):
-                                for idx, email in enumerate(res.get('retrieved_emails', [])):
-                                    st.info(f"REFERENCE {idx+1}: {email[:300]}...")
+                                for ref_idx, email in enumerate(res.get('retrieved_emails', [])):
+                                    st.info(f"REFERENCE {ref_idx+1}: {email[:300]}...")
                                 if res.get('retrieved_graph'):
                                     st.success("\n".join(res['retrieved_graph']))
                     else:
