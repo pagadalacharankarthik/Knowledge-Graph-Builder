@@ -21,7 +21,7 @@ except ImportError as e:
 
 # Setup UI page configuration
 st.set_page_config(
-    page_title="Enterprise Intelligence Hub",
+    page_title="AI KNOWLEDGE GRAPH system",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -104,6 +104,9 @@ def initialize_knowledge_core(version_tag):
 db_ready = initialize_knowledge_core("v9.1.5")
 
 # Topology Controls mapped below
+
+# Main Branding
+st.markdown("<h1 style='text-align: center; color: #38bdf8; letter-spacing: 2px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);'>AI KNOWLEDGE GRAPH system</h1>", unsafe_allow_html=True)
 
 # Tabbed Interface for Professional Layout
 tab_intel, tab_analytics = st.tabs(["🔎 INTELLIGENCE HUB", "📈 ADVANCED ANALYTICS"])
