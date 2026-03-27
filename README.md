@@ -7,12 +7,56 @@ Built by **Charan Karthik**
 
 ---
 
-## 🚀 Project Overview
-This project unifies four critical milestones into a cohesive, production-ready application:
-1.  **Milestone 1**: Data Ingestion (Cleaning, enrichment, and normalization).
-2.  **Milestone 2**: Knowledge Graph construction using **Neo4j**.
-3.  **Milestone 3**: Hybrid RAG pipeline using **FAISS** and **Groq LLM**.
-4.  **Milestone 4**: Final Integrated Dashboard & UI.
+## 🚀 Project Vision & Outcomes
+This project develops an AI-powered platform that automatically builds dynamic **Knowledge Graphs** from enterprise data sources such as documents, emails, and databases. By combining **RAG pipelines**, **embeddings**, and **semantic search**, the platform enables executives, consultants, and researchers to uncover hidden relationships across large datasets. With an interactive graph dashboard, users can explore entities, connections, and insights to improve strategic decision-making.
+
+### Key Outcomes:
+- **Automated Extraction**: Seamless extraction of entities and relationships from multi-source data.
+- **Dynamic Construction**: Real-time knowledge graph building and incremental updates.
+- **Semantic Intelligence**: RAG-powered semantic search across complex enterprise datasets.
+- **Interactive Exploration**: High-fidelity dashboards for graph visualization and drill-down analysis.
+- **Faster Decisions**: Actionable intelligence for rapid, informed business strategies.
+
+---
+
+## 🧩 Modules Implemented
+
+### 1. Data Ingestion & Processing Layer
+- Connects to enterprise sources (databases, emails, docs).
+- Cleans, normalizes, and indexes raw data for the retrieval pipeline.
+
+### 2. Entity & Relationship Extraction Engine
+- Uses LLM-based NER (Named Entity Recognition) and relation extraction.
+- Creates structured triples (**entity–relation–entity**) for the graph database.
+
+### 3. Graph Construction & Storage Hub
+- Builds and stores knowledge graphs in **Neo4j**.
+- Supports large-scale graph queries and persistent storage of relationships.
+
+### 4. RAG + Semantic Search Layer
+- Uses **FAISS** embeddings and **Groq LLM (Llama-3)**.
+- Enables contextual Q&A and intelligent knowledge retrieval.
+
+### 5. Interactive Graph Dashboard
+- Provides visual graph exploration using **Streamlit** and **PyVis**.
+- Allows filtering, search, and deep-dive analysis of topological nodes.
+
+---
+
+## 🏁 Development Milestones
+
+| Milestone | Objective | Key Tasks |
+| :--- | :--- | :--- |
+| **Milestone 1** | Data Ingestion & Schema Design | Build ingestion pipelines, define knowledge graph schema. |
+| **Milestone 2** | Entity Extraction & Graph Building | Apply LLM NER, store results in Neo4j, validate graph. |
+| **Milestone 3** | Semantic Search & RAG Pipelines | Integrate embeddings with FAISS, build semantic search. |
+| **Milestone 4** | Dashboard & Deployment | Build graph visualization UI, integrate APIs, deploy system. |
+
+### Evaluation Criteria:
+- **Phase 1**: Data ingestion functional; baseline schema defined.
+- **Phase 2**: Knowledge graph successfully built; nodes & relations extracted.
+- **Phase 3**: Semantic search and RAG engine operational with low latency.
+- **Phase 4**: Dashboard fully deployed and live for enterprise intelligence.
 
 ---
 
