@@ -1,6 +1,13 @@
 # 🧠 AI KNOWLEDGE GRAPH system
 Built by **Charan Karthik**
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Neo4j](https://img.shields.io/badge/Neo4j-008CC1?style=for-the-badge&logo=neo4j&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-f55036?style=for-the-badge)
+![Llama3](https://img.shields.io/badge/Llama_3-0467DF?style=for-the-badge)
+![FAISS](https://img.shields.io/badge/FAISS-FFB100?style=for-the-badge)
+
 **Live Production App:** [https://knowledge-graph-builder-001.streamlit.app/](https://knowledge-graph-builder-001.streamlit.app/)
 
 **Agile Project Tracking:** [Agile Project Sheet (Excel)](CharanKarthik_Agile_Sheet.xlsx)
@@ -8,7 +15,7 @@ Built by **Charan Karthik**
 ---
 
 ## 🚀 Project Vision & Outcomes
-This project develops an AI-powered platform that automatically builds dynamic **Knowledge Graphs** from enterprise data sources such as documents, emails, and databases. By combining **RAG pipelines**, **embeddings**, and **semantic search**, the platform enables executives, consultants, and researchers to uncover hidden relationships across large datasets. With an interactive graph dashboard, users can explore entities, connections, and insights to improve strategic decision-making.
+This project develops an AI-powered platform that automatically builds dynamic **Knowledge Graphs** from the **Enron Email Dataset**. By combining **RAG pipelines**, **embeddings**, and **semantic search**, the platform enables executives, consultants, and researchers to uncover hidden relationships across large datasets. With an interactive graph dashboard, users can explore entities, connections, and insights to improve strategic decision-making.
 
 ### Key Outcomes:
 - **Automated Extraction**: Seamless extraction of entities and relationships from multi-source data.
@@ -45,12 +52,12 @@ This project develops an AI-powered platform that automatically builds dynamic *
 
 ## 🏁 Development Milestones
 
-| Milestone | Objective | Key Tasks |
+| Milestone | Objective | Technical Details |
 | :--- | :--- | :--- |
-| **Milestone 1** | Data Ingestion & Schema Design | Build ingestion pipelines, define knowledge graph schema. |
-| **Milestone 2** | Entity Extraction & Graph Building | Apply LLM NER, store results in Neo4j, validate graph. |
-| **Milestone 3** | Semantic Search & RAG Pipelines | Integrate embeddings with FAISS, build semantic search. |
-| **Milestone 4** | Dashboard & Deployment | Build graph visualization UI, integrate APIs, deploy system. |
+| **Milestone 1** | Data Ingestion & Schema Design | Build ingestion pipelines using Pandas, define Neo4j knowledge graph schemas (Person, Org, Loc). |
+| **Milestone 2** | Entity Extraction & Graph Building | Apply LLM-based NER to extract triples; use Cypher to populate Neo4j and validate relationship density. |
+| **Milestone 3** | Semantic Search & RAG Pipelines | Integrate Sentence-Transformers for embeddings, use FAISS for vector indexing, and build the hybrid RAG logic. |
+| **Milestone 4** | Dashboard & Deployment | Build the unified Streamlit interface, integrate dynamic PyVis graph visualizations, and deploy to Streamlit Cloud. |
 
 ### Evaluation Criteria:
 - **Phase 1**: Data ingestion functional; baseline schema defined.
@@ -80,20 +87,24 @@ The system uses a unique hybrid retrieval strategy:
 
 ---
 
-## 📂 Project Structure
-```
+## 📂 Full Project Structure
+```text
 project/
-├── Milestone_4/            # Final Integrated Application
+├── Milestone_4/                # PRODUCTION: Unified Application
 │   ├── frontend/
-│   │   └── app.py          # Dashboard (Streamlit UI)
+│   │   └── app.py              # Main Streamlit Dashboard
 │   └── backend/
-│       ├── rag.py          # RAG (FAISS + LLM) Logic
-│       ├── graph.py        # Knowledge Graph (Neo4j) logic
-│       ├── initialize_db.py # One-time Database Initialization
-│       └── data/
-│           └── cleaned_enron_emails.csv # Real Enron Dataset
-├── requirements.txt        # Combined Dependencies
-└── README.md               # You are here
+│       ├── rag.py              # Hybrid RAG & Vector Search Logic
+│       ├── graph.py            # Neo4j Graph Query Interface
+│       ├── initialize_db.py    # Database & Index Initialization Script
+│       └── metrics.py          # Latency & Accuracy Telemetry
+├── Data Ingestion Milestone 1/ # RESEARCH: Preprocessing Scripts
+├── Milestone 2/                # RESEARCH: Graph Construction Notebooks
+├── Milestone 3/                # RESEARCH: Vector/RAG Prototyping
+├── data/                       # External dataset pointers
+├── requirements.txt            # Global Dependencies
+├── LICENSE                     # MIT License
+└── README.md                   # Project Overview & SOP
 ```
 
 ---
@@ -103,9 +114,8 @@ project/
 ### Standard Operating Procedure (SOP)
 1.  **Environment Setup**: Ensure Python 3.9+ is active and all API keys (Groq, Neo4j) are ready.
 2.  **Dependency Handling**: Install all packages from the root `requirements.txt`.
-3.  **Data Generation**: Run the Milestone 1 scripts to produce the `cleaned_enron_emails.csv`.
-4.  **Graph Initialization**: Run `initialize_db.py` to wipe/populate the Neo4j instance.
-5.  **Application Launch**: Start Streamlit through the `frontend/app.py` entry point.
+3.  **Graph Initialization**: Run `initialize_db.py` to wipe/populate the Neo4j instance.
+4.  **Application Launch**: Start Streamlit through the `frontend/app.py` entry point.
 
 ---
 
@@ -125,55 +135,19 @@ streamlit run "Milestone_4/frontend/app.py"
 
 ---
 
----
-
-## 🌐 How to Deploy to Streamlit Cloud (Live Link Guide)
-
-1.  **GitHub**: Push your entire `Milestone_4` folder to a public GitHub repo.
-2.  **Streamlit Share**: Log in and click "New app".
-3.  **Main File Path**: Set this to `Milestone_4/frontend/app.py`.
-4.  **Secrets (Advanced Settings)**:
-    ```toml
-    NEO4J_URI = "..."
-    NEO4J_USER = "neo4j"
-    NEO4J_PASSWORD = "..."
-    LLM_API_KEY = "..."
-    ```
-
-### 📋 Files to Update for Accuracy
-If the app is blank or answers are wrong, ensure you have updated these files in your GitHub repo:
-1.  **`Milestone_4/backend/data/cleaned_enron_emails.csv`**: (The 20k rows version).
-2.  **`Milestone_4/backend/faiss_index`**: (Generated by running `initialize_db.py` locally).
-3.  **`Milestone_4/frontend/app.py`**: (The new restructured UI).
-4.  **`requirements.txt`**: (Must have `torch`, `faiss-cpu`, `sentence-transformers`).
+## 🌐 Deployment Configuration
+Deployed to **Streamlit Cloud**. Requires the following Secrets:
+- `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`
+- `LLM_API_KEY` (Groq)
 
 ---
 
 ## 🔍 Example Queries
-- *"What were the most discussed topics in the months before the collapse?"*
-- *"Who is discussing energy trading?"*
-- *"What are the most frequent companies mentioned?"*
-- *"What are the patterns in, or most common words in, email subject lines?"*
-- *"Who is discussed in relation to the 'energy modeling forum'?"*
-- *"Are there any mentions of specific Enron Corp conferences or meeting planning?"*
-- *"What are the common topics discussed by Steffes James and Phillip K. Allen?"*
-- *"Are there any legal or regulatory concerns regarding ISO tariff confidentiality?"*
-- *"What action items were recorded for the Fundamentals Desk?"*
-- *"Who is 'Janelle Daniel' communicating with regarding deals?"*
-- *"Are there any mentions of the 'Foreign Corrupt Practices Act' (FCPA)?"*
-- *"What projects involve 'Tracy Ramsey'?"*
-- *"Is there any mention of a 'Deals summary sheet'?"*
-- *"Who are the primary contacts for 'climate change strategy'?"*
-<!-- Who is discussed in relation to the 'energy modeling forum'?
-Are there any mentions of specific Enron Corp conferences or meeting planning?
-What are the common topics discussed by Steffes James and Phillip K. Allen?
-Are there any legal or regulatory concerns regarding ISO tariff confidentiality?
-What action items were recorded for the Fundamentals Desk?
-Who is 'Janelle Daniel' communicating with regarding deals?
-Are there any mentions of the 'Foreign Corrupt Practices Act' (FCPA)?
-What projects involve 'Tracy Ramsey'?
-Is there any mention of a 'Deals summary sheet'?
-Who are the primary contacts for 'climate change strategy'? -->
+- *"Who are the key players in Energy Trading?"*
+- *"Summarize Kenneth Lay's involvement in company strategy."*
+- *"Detail the communication between Jeffrey Skilling and Andrew Fastow."*
+- *"What are the most frequent organizations mentioned in the data?"*
+- *"Find all mentions of sensitive or confidential deal structures."*
 
 ---
-© 2026 AI Knowledge Graph Builder | Build by **Charan Karthik**
+© 2026 AI KNOWLEDGE GRAPH system | Built by **Charan Karthik**

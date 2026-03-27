@@ -162,7 +162,7 @@ You MUST output a valid JSON object:
             "retrieved_graph": graph_ctx
         }
     except Exception as e:
-        return {"question": question, "answer": f"LLM Error: {str(e)}", "extracted_entities": [], "retrieval_latency_seconds": latency, "db_rows": db_rows, "retrieved_emails": email_ctx}
+        return {"question": question, "answer": f"LLM Error: {str(e)}", "extracted_entities": [], "retrieval_latency_seconds": latency, "db_rows": db_rows, "retrieved_emails": email_ctx, "retrieved_graph": graph_ctx}
 
 def get_email_stats():
     core = KnowledgeCore.get_instance()

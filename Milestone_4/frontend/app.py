@@ -128,25 +128,56 @@ with tab_intel:
         # Box 2: Search Core
         with st.container(border=True):
             st.markdown("#### 🔍 CONTEXTUAL SEARCH")
-            query = st.text_input("QUERY_INPUT", placeholder="Request analysis...", label_visibility="collapsed")
-            if st.button("EXECUTE SEARCH"):
-                if query:
+            
+            # Quick Intelligence Buttons
+            st.markdown("<p style='font-size:0.8rem; opacity:0.7; margin-bottom:5px;'>💡 SAMPLE INTELLIGENCE ENQUIRIES</p>", unsafe_allow_html=True)
+            q_col1, q_col2 = st.columns(2)
+            
+            sample_queries = [
+                ("📉 Market Players", "Who are the key players in Energy Trading?"),
+                ("👨‍💼 Exec Strategy", "Summarize Kenneth Lay's involvement in company strategy."),
+                ("🗣️ Key Dialogues", "Detail the communication between Jeffrey Skilling and Andrew Fastow."),
+                ("🏢 Top Orgs", "What are the most frequent organizations mentioned in the data?"),
+                ("🔐 Deal Structures", "Find all mentions of sensitive or confidential deal structures.")
+            ]
+            
+            auto_query = None
+            for idx, (label, q_text) in enumerate(sample_queries):
+                target_col = q_col1 if idx % 2 == 0 else q_col2
+                if target_col.button(label, key=f"btn_{idx}", use_container_width=True):
+                    auto_query = q_text
+
+            st.markdown("---")
+            query = st.text_input("QUERY_INPUT", value=auto_query if auto_query else "", placeholder="Request analysis...", label_visibility="collapsed")
+            
+            # Trigger search if button clicked OR if manual execute pressed
+            if st.button("EXECUTE SEARCH", type="primary", use_container_width=True) or auto_query:
+                active_query = auto_query if auto_query else query
+                if active_query:
                     if db_ready:
-                        with st.spinner("Synthesizing..."):
-                            res = answer_question(query)
+                        with st.spinner("Synthesizing Insights..."):
+                            res = answer_question(active_query)
                             st.markdown(f"""
                                 <div class="answer-area">
                                     <h4 style='margin:0; color:#38bdf8;'>💡 SYSTEM RESPONSE</h4>
                                     <p style='margin-top:10px;'>{res.get('answer')}</p>
-                                    <span style='font-size:0.8rem; opacity:0.6;'>Latency: {res.get('retrieval_latency_seconds', 0.0):.2f}s | Entities: {len(res.get('extracted_entities', []))}</span>
+                                    <div style='margin-top:15px; border-top:1px solid #1e293b; padding-top:10px;'>
+                                        <small style='color:#38bdf8;'>🔗 TRACE ENTITIES:</small><br/>
+                                        <small style='opacity:0.8;'>{", ".join(res.get('extracted_entities', []))}</small>
+                                    </div>
+                                    <div style='text-align:right; border-top:1px solid #1e293b; margin-top:10px; padding-top:5px;'>
+                                        <small style='opacity:0.5;'>LATENCY: {res.get('retrieval_latency_seconds', 0):.2f}s</small>
+                                    </div>
                                 </div>
                             """, unsafe_allow_html=True)
                             
-                            with st.expander("🛠️ NEURAL TRACE (Vector + Graph Audit)", expanded=True):
+                            with st.expander("🛠️ NEURAL TRACE (Vector + Graph Audit)", expanded=False):
                                 for idx, email in enumerate(res.get('retrieved_emails', [])):
-                                    st.info(f"REFERENCE {idx+1}: {email[:200]}...")
+                                    st.info(f"REFERENCE {idx+1}: {email[:300]}...")
                                 if res.get('retrieved_graph'):
                                     st.success("\n".join(res['retrieved_graph']))
+                    else:
+                        st.error("Core Engine Not Ready.")
             else:
                 st.info("AI Core Standby. Enter query.")
 
