@@ -1,4 +1,4 @@
-# 🧠 AI KNOWLEDGE GRAPH system
+# 🧠 AI Knowledge Graph Builder for Enterprise Intelligence
 Built by **Charan Karthik**
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
